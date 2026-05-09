@@ -1,0 +1,138 @@
+#transit-overlay-container {
+  position: fixed;
+  z-index: 500;
+  background: transparent;
+  pointer-events: none;
+  overflow: hidden;
+  contain: strict;
+}
+
+#transit-overlay-container[hidden] {
+  display: none;
+}
+
+#transit-overlay-container[data-debug="true"] {
+  outline: 2px solid rgba(255, 0, 128, 0.85);
+  outline-offset: -2px;
+}
+
+#transit-leaflet-map {
+  width: 100%;
+  height: 100%;
+  background: transparent;
+}
+
+#transit-overlay-container .leaflet-container {
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  pointer-events: none;
+}
+
+#transit-overlay-container .leaflet-control-container {
+  display: none;
+}
+
+#transit-overlay-container .leaflet-pane,
+#transit-overlay-container .leaflet-map-pane,
+#transit-overlay-container .leaflet-overlay-pane,
+#transit-overlay-container svg {
+  pointer-events: none;
+}
+
+#transit-overlay-container .transit-station-marker {
+  pointer-events: none;
+}
+
+#transit-overlay-toggle {
+  position: fixed;
+  z-index: 501;
+  min-width: 76px;
+  height: 34px;
+  border: 1px solid rgba(10, 21, 32, 0.2);
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.94);
+  color: #102033;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+  font: 600 13px/1 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+#transit-overlay-toggle:hover {
+  background: #ffffff;
+}
+
+#transit-overlay-toggle[data-enabled="true"] {
+  border-color: rgba(0, 85, 150, 0.5);
+  background: #eef7ff;
+  color: #005596;
+}
+
+#transit-overlay-toggle[hidden] {
+  display: none;
+}
+
+#transit-debug-panel {
+  position: fixed;
+  z-index: 502;
+  width: 190px;
+  border: 1px solid rgba(10, 21, 32, 0.28);
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.96);
+  color: #102033;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.2);
+  font: 600 11px/1.25 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  padding: 8px;
+  pointer-events: auto;
+}
+
+#transit-debug-panel[hidden] {
+  display: none;
+}
+
+.transit-debug-title {
+  margin-bottom: 5px;
+  color: #005596;
+  font-size: 12px;
+}
+
+.transit-debug-readout {
+  margin-bottom: 7px;
+  color: #2d3b4d;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+.transit-debug-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5px;
+}
+
+#transit-debug-panel button {
+  min-height: 26px;
+  border: 1px solid rgba(10, 21, 32, 0.2);
+  border-radius: 5px;
+  background: #f8fbff;
+  color: #102033;
+  font: inherit;
+  cursor: pointer;
+}
+
+#transit-debug-panel button:hover {
+  background: #edf6ff;
+}
+
+.transit-debug-reset {
+  width: 100%;
+  margin-top: 6px;
+}
+
+.transit-station-tooltip {
+  border: 1px solid rgba(10, 21, 32, 0.2);
+  border-radius: 6px;
+  color: #102033;
+  font: 600 12px/1.25 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+}

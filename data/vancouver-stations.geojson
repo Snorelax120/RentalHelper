@@ -1,0 +1,1252 @@
+{
+  "type": "FeatureCollection",
+  "name": "vancouver-skytrain-stations",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "station_id": "99944",
+        "station_name": "22nd Street",
+        "full_station_name": "22nd Street Station",
+        "line": [
+          "Expo"
+        ],
+        "region": "Metro Vancouver",
+        "system": "SkyTrain",
+        "source": "TransLink GTFS Static Data",
+        "source_feed_date": "2026-05-01",
+        "area": "Metro Vancouver"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.94898,
+          49.200059
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "station_id": "99938",
+        "station_name": "29th Avenue",
+        "full_station_name": "29th Avenue Station",
+        "line": [
+          "Expo"
+        ],
+        "region": "Metro Vancouver",
+        "system": "SkyTrain",
+        "source": "TransLink GTFS Static Data",
+        "source_feed_date": "2026-05-01",
+        "area": "Metro Vancouver"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -123.046113,
+          49.244283
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "station_id": "99906",
+        "station_name": "Aberdeen",
+        "full_station_name": "Aberdeen Station",
+        "line": [
+          "Canada"
+        ],
+        "region": "Metro Vancouver",
+        "system": "SkyTrain",
+        "source": "TransLink GTFS Static Data",
+        "source_feed_date": "2026-05-01",
+        "area": "Metro Vancouver"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -123.136325,
+          49.184
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "station_id": "99948",
+        "station_name": "Braid",
+        "full_station_name": "Braid Station",
+        "line": [
+          "Expo"
+        ],
+        "region": "Metro Vancouver",
+        "system": "SkyTrain",
+        "source": "TransLink GTFS Static Data",
+        "source_feed_date": "2026-05-01",
+        "area": "Metro Vancouver"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.8828,
+          49.233244
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "station_id": "99921",
+        "station_name": "Brentwood Town Centre",
+        "full_station_name": "Brentwood Town Centre Station",
+        "line": [
+          "Millennium"
+        ],
+        "region": "Metro Vancouver",
+        "system": "SkyTrain",
+        "source": "TransLink GTFS Static Data",
+        "source_feed_date": "2026-05-01",
+        "area": "Metro Vancouver"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -123.001829,
+          49.266396
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "station_id": "99907",
+        "station_name": "Bridgeport",
+        "full_station_name": "Bridgeport Station",
+        "line": [
+          "Canada"
+        ],
+        "region": "Metro Vancouver",
+        "system": "SkyTrain",
+        "source": "TransLink GTFS Static Data",
+        "source_feed_date": "2026-05-01",
+        "area": "Metro Vancouver"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -123.126062,
+          49.195538
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "station_id": "99912",
+        "station_name": "Broadway-City Hall",
+        "full_station_name": "Broadway-City Hall Station",
+        "line": [
+          "Canada"
+        ],
+        "region": "Metro Vancouver",
+        "system": "SkyTrain",
+        "source": "TransLink GTFS Static Data",
+        "source_feed_date": "2026-05-01",
+        "area": "Metro Vancouver"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -123.114822,
+          49.262717
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "station_id": "99927",
+        "station_name": "Burquitlam",
+        "full_station_name": "Burquitlam Station",
+        "line": [
+          "Millennium"
+        ],
+        "region": "Metro Vancouver",
+        "system": "SkyTrain",
+        "source": "TransLink GTFS Static Data",
+        "source_feed_date": "2026-05-01",
+        "area": "Metro Vancouver"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.889834,
+          49.261403
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "station_id": "99933",
+        "station_name": "Burrard",
+        "full_station_name": "Burrard Station",
+        "line": [
+          "Expo"
+        ],
+        "region": "Metro Vancouver",
+        "system": "SkyTrain",
+        "source": "TransLink GTFS Static Data",
+        "source_feed_date": "2026-05-01",
+        "area": "Metro Vancouver"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -123.119557,
+          49.285614
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "station_id": "99959",
+        "station_name": "Capstan",
+        "full_station_name": "Capstan Station",
+        "line": [
+          "Canada"
+        ],
+        "region": "Metro Vancouver",
+        "system": "SkyTrain",
+        "source": "TransLink GTFS Static Data",
+        "source_feed_date": "2026-05-01",
+        "area": "Metro Vancouver"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -123.131862,
+          49.189147
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "station_id": "99946",
+        "station_name": "Columbia",
+        "full_station_name": "Columbia Station",
+        "line": [
+          "Expo"
+        ],
+        "region": "Metro Vancouver",
+        "system": "SkyTrain",
+        "source": "TransLink GTFS Static Data",
+        "source_feed_date": "2026-05-01",
+        "area": "Metro Vancouver"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.906175,
+          49.20483
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "station_id": "99917",
+        "station_name": "Commercial-Broadway",
+        "full_station_name": "Commercial-Broadway Station",
+        "line": [
+          "Expo",
+          "Millennium"
+        ],
+        "region": "Metro Vancouver",
+        "system": "SkyTrain",
+        "source": "TransLink GTFS Static Data",
+        "source_feed_date": "2026-05-01",
+        "area": "Metro Vancouver"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -123.068765,
+          49.26267
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "station_id": "99930",
+        "station_name": "Coquitlam Central",
+        "full_station_name": "Coquitlam Central Station",
+        "line": [
+          "Millennium"
+        ],
+        "region": "Metro Vancouver",
+        "system": "SkyTrain",
+        "source": "TransLink GTFS Static Data",
+        "source_feed_date": "2026-05-01",
+        "area": "Metro Vancouver"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.800421,
+          49.27434
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "station_id": "99943",
+        "station_name": "Edmonds",
+        "full_station_name": "Edmonds Station",
+        "line": [
+          "Expo"
+        ],
+        "region": "Metro Vancouver",
+        "system": "SkyTrain",
+        "source": "TransLink GTFS Static Data",
+        "source_feed_date": "2026-05-01",
+        "area": "Metro Vancouver"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.959104,
+          49.211936
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "station_id": "99950",
+        "station_name": "Gateway",
+        "full_station_name": "Gateway Station",
+        "line": [
+          "Expo"
+        ],
+        "region": "Metro Vancouver",
+        "system": "SkyTrain",
+        "source": "TransLink GTFS Static Data",
+        "source_feed_date": "2026-05-01",
+        "area": "Metro Vancouver"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.85061,
+          49.198955
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "station_id": "99920",
+        "station_name": "Gilmore",
+        "full_station_name": "Gilmore Station",
+        "line": [
+          "Millennium"
+        ],
+        "region": "Metro Vancouver",
+        "system": "SkyTrain",
+        "source": "TransLink GTFS Static Data",
+        "source_feed_date": "2026-05-01",
+        "area": "Metro Vancouver"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -123.013554,
+          49.264974
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "station_id": "99934",
+        "station_name": "Granville",
+        "full_station_name": "Granville Station",
+        "line": [
+          "Expo"
+        ],
+        "region": "Metro Vancouver",
+        "system": "SkyTrain",
+        "source": "TransLink GTFS Static Data",
+        "source_feed_date": "2026-05-01",
+        "area": "Metro Vancouver"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -123.115721,
+          49.283173
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "station_id": "99922",
+        "station_name": "Holdom",
+        "full_station_name": "Holdom Station",
+        "line": [
+          "Millennium"
+        ],
+        "region": "Metro Vancouver",
+        "system": "SkyTrain",
+        "source": "TransLink GTFS Static Data",
+        "source_feed_date": "2026-05-01",
+        "area": "Metro Vancouver"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.982169,
+          49.264734
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "station_id": "99929",
+        "station_name": "Inlet Centre",
+        "full_station_name": "Inlet Centre Station",
+        "line": [
+          "Millennium"
+        ],
+        "region": "Metro Vancouver",
+        "system": "SkyTrain",
+        "source": "TransLink GTFS Static Data",
+        "source_feed_date": "2026-05-01",
+        "area": "Metro Vancouver"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.828187,
+          49.27721
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "station_id": "99939",
+        "station_name": "Joyce-Collingwood",
+        "full_station_name": "Joyce-Collingwood Station",
+        "line": [
+          "Expo"
+        ],
+        "region": "Metro Vancouver",
+        "system": "SkyTrain",
+        "source": "TransLink GTFS Static Data",
+        "source_feed_date": "2026-05-01",
+        "area": "Metro Vancouver"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -123.031811,
+          49.238398
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "station_id": "99911",
+        "station_name": "King Edward",
+        "full_station_name": "King Edward Station",
+        "line": [
+          "Canada"
+        ],
+        "region": "Metro Vancouver",
+        "system": "SkyTrain",
+        "source": "TransLink GTFS Static Data",
+        "source_feed_date": "2026-05-01",
+        "area": "Metro Vancouver"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -123.11545,
+          49.249175
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "station_id": "99952",
+        "station_name": "King George",
+        "full_station_name": "King George Station",
+        "line": [
+          "Expo"
+        ],
+        "region": "Metro Vancouver",
+        "system": "SkyTrain",
+        "source": "TransLink GTFS Static Data",
+        "source_feed_date": "2026-05-01",
+        "area": "Metro Vancouver"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.844737,
+          49.18279
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "station_id": "99932",
+        "station_name": "Lafarge Lake-Douglas",
+        "full_station_name": "Lafarge Lake-Douglas Station",
+        "line": [
+          "Millennium"
+        ],
+        "region": "Metro Vancouver",
+        "system": "SkyTrain",
+        "source": "TransLink GTFS Static Data",
+        "source_feed_date": "2026-05-01",
+        "area": "Metro Vancouver"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.791541,
+          49.285718
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "station_id": "99924",
+        "station_name": "Lake City Way",
+        "full_station_name": "Lake City Way Station",
+        "line": [
+          "Millennium"
+        ],
+        "region": "Metro Vancouver",
+        "system": "SkyTrain",
+        "source": "TransLink GTFS Static Data",
+        "source_feed_date": "2026-05-01",
+        "area": "Metro Vancouver"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.939192,
+          49.254635
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "station_id": "99909",
+        "station_name": "Langara-49th Avenue",
+        "full_station_name": "Langara-49th Avenue Station",
+        "line": [
+          "Canada"
+        ],
+        "region": "Metro Vancouver",
+        "system": "SkyTrain",
+        "source": "TransLink GTFS Static Data",
+        "source_feed_date": "2026-05-01",
+        "area": "Metro Vancouver"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -123.116523,
+          49.22573
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "station_id": "99905",
+        "station_name": "Lansdowne",
+        "full_station_name": "Lansdowne Station",
+        "line": [
+          "Canada"
+        ],
+        "region": "Metro Vancouver",
+        "system": "SkyTrain",
+        "source": "TransLink GTFS Static Data",
+        "source_feed_date": "2026-05-01",
+        "area": "Metro Vancouver"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -123.136475,
+          49.174665
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "station_id": "99931",
+        "station_name": "Lincoln",
+        "full_station_name": "Lincoln Station",
+        "line": [
+          "Millennium"
+        ],
+        "region": "Metro Vancouver",
+        "system": "SkyTrain",
+        "source": "TransLink GTFS Static Data",
+        "source_feed_date": "2026-05-01",
+        "area": "Metro Vancouver"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.793917,
+          49.280423
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "station_id": "99926",
+        "station_name": "Lougheed Town Centre",
+        "full_station_name": "Lougheed Town Centre Station",
+        "line": [
+          "Expo",
+          "Millennium"
+        ],
+        "region": "Metro Vancouver",
+        "system": "SkyTrain",
+        "source": "TransLink GTFS Static Data",
+        "source_feed_date": "2026-05-01",
+        "area": "Metro Vancouver"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.896805,
+          49.248512
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "station_id": "99936",
+        "station_name": "Main Street-Science World",
+        "full_station_name": "Main Street-Science World Station",
+        "line": [
+          "Expo"
+        ],
+        "region": "Metro Vancouver",
+        "system": "SkyTrain",
+        "source": "TransLink GTFS Static Data",
+        "source_feed_date": "2026-05-01",
+        "area": "Metro Vancouver"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -123.100392,
+          49.273137
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "station_id": "99908",
+        "station_name": "Marine Drive",
+        "full_station_name": "Marine Drive Station",
+        "line": [
+          "Canada"
+        ],
+        "region": "Metro Vancouver",
+        "system": "SkyTrain",
+        "source": "TransLink GTFS Static Data",
+        "source_feed_date": "2026-05-01",
+        "area": "Metro Vancouver"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -123.117015,
+          49.209666
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "station_id": "99941",
+        "station_name": "Metrotown",
+        "full_station_name": "Metrotown Station",
+        "line": [
+          "Expo"
+        ],
+        "region": "Metro Vancouver",
+        "system": "SkyTrain",
+        "source": "TransLink GTFS Static Data",
+        "source_feed_date": "2026-05-01",
+        "area": "Metro Vancouver"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -123.00392,
+          49.225825
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "station_id": "99928",
+        "station_name": "Moody Centre",
+        "full_station_name": "Moody Centre Station",
+        "line": [
+          "Millennium"
+        ],
+        "region": "Metro Vancouver",
+        "system": "SkyTrain",
+        "source": "TransLink GTFS Static Data",
+        "source_feed_date": "2026-05-01",
+        "area": "Metro Vancouver"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.846034,
+          49.278012
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "station_id": "99937",
+        "station_name": "Nanaimo",
+        "full_station_name": "Nanaimo Station",
+        "line": [
+          "Expo"
+        ],
+        "region": "Metro Vancouver",
+        "system": "SkyTrain",
+        "source": "TransLink GTFS Static Data",
+        "source_feed_date": "2026-05-01",
+        "area": "Metro Vancouver"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -123.055908,
+          49.248321
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "station_id": "99945",
+        "station_name": "New Westminster",
+        "full_station_name": "New Westminster Station",
+        "line": [
+          "Expo"
+        ],
+        "region": "Metro Vancouver",
+        "system": "SkyTrain",
+        "source": "TransLink GTFS Static Data",
+        "source_feed_date": "2026-05-01",
+        "area": "Metro Vancouver"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.912614,
+          49.201437
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "station_id": "99910",
+        "station_name": "Oakridge-41st Avenue",
+        "full_station_name": "Oakridge-41st Avenue Station",
+        "line": [
+          "Canada"
+        ],
+        "region": "Metro Vancouver",
+        "system": "SkyTrain",
+        "source": "TransLink GTFS Static Data",
+        "source_feed_date": "2026-05-01",
+        "area": "Metro Vancouver"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -123.116295,
+          49.233739
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "station_id": "99913",
+        "station_name": "Olympic Village",
+        "full_station_name": "Olympic Village Station",
+        "line": [
+          "Canada"
+        ],
+        "region": "Metro Vancouver",
+        "system": "SkyTrain",
+        "source": "TransLink GTFS Static Data",
+        "source_feed_date": "2026-05-01",
+        "area": "Metro Vancouver"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -123.115348,
+          49.266596
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "station_id": "99940",
+        "station_name": "Patterson",
+        "full_station_name": "Patterson Station",
+        "line": [
+          "Expo"
+        ],
+        "region": "Metro Vancouver",
+        "system": "SkyTrain",
+        "source": "TransLink GTFS Static Data",
+        "source_feed_date": "2026-05-01",
+        "area": "Metro Vancouver"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -123.01267,
+          49.229626
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "station_id": "99925",
+        "station_name": "Production Way-University",
+        "full_station_name": "Production Way-University Station",
+        "line": [
+          "Expo",
+          "Millennium"
+        ],
+        "region": "Metro Vancouver",
+        "system": "SkyTrain",
+        "source": "TransLink GTFS Static Data",
+        "source_feed_date": "2026-05-01",
+        "area": "Metro Vancouver"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.918223,
+          49.253416
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "station_id": "99918",
+        "station_name": "Renfrew",
+        "full_station_name": "Renfrew Station",
+        "line": [
+          "Millennium"
+        ],
+        "region": "Metro Vancouver",
+        "system": "SkyTrain",
+        "source": "TransLink GTFS Static Data",
+        "source_feed_date": "2026-05-01",
+        "area": "Metro Vancouver"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -123.045379,
+          49.258913
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "station_id": "99904",
+        "station_name": "Richmond-Brighouse",
+        "full_station_name": "Richmond-Brighouse Station",
+        "line": [
+          "Canada"
+        ],
+        "region": "Metro Vancouver",
+        "system": "SkyTrain",
+        "source": "TransLink GTFS Static Data",
+        "source_feed_date": "2026-05-01",
+        "area": "Metro Vancouver"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -123.136372,
+          49.167943
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "station_id": "99942",
+        "station_name": "Royal Oak",
+        "full_station_name": "Royal Oak Station",
+        "line": [
+          "Expo"
+        ],
+        "region": "Metro Vancouver",
+        "system": "SkyTrain",
+        "source": "TransLink GTFS Static Data",
+        "source_feed_date": "2026-05-01",
+        "area": "Metro Vancouver"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.98848,
+          49.220068
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "station_id": "99919",
+        "station_name": "Rupert",
+        "full_station_name": "Rupert Station",
+        "line": [
+          "Millennium"
+        ],
+        "region": "Metro Vancouver",
+        "system": "SkyTrain",
+        "source": "TransLink GTFS Static Data",
+        "source_feed_date": "2026-05-01",
+        "area": "Metro Vancouver"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -123.032867,
+          49.260784
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "station_id": "99947",
+        "station_name": "Sapperton",
+        "full_station_name": "Sapperton Station",
+        "line": [
+          "Expo"
+        ],
+        "region": "Metro Vancouver",
+        "system": "SkyTrain",
+        "source": "TransLink GTFS Static Data",
+        "source_feed_date": "2026-05-01",
+        "area": "Metro Vancouver"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.889393,
+          49.224662
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "station_id": "99949",
+        "station_name": "Scott Road",
+        "full_station_name": "Scott Road Station",
+        "line": [
+          "Expo"
+        ],
+        "region": "Metro Vancouver",
+        "system": "SkyTrain",
+        "source": "TransLink GTFS Static Data",
+        "source_feed_date": "2026-05-01",
+        "area": "Metro Vancouver"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.874197,
+          49.20442
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "station_id": "99902",
+        "station_name": "Sea Island Centre",
+        "full_station_name": "Sea Island Centre Station",
+        "line": [
+          "Canada"
+        ],
+        "region": "Metro Vancouver",
+        "system": "SkyTrain",
+        "source": "TransLink GTFS Static Data",
+        "source_feed_date": "2026-05-01",
+        "area": "Metro Vancouver"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -123.157887,
+          49.192986
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "station_id": "99923",
+        "station_name": "Sperling-Burnaby Lake",
+        "full_station_name": "Sperling-Burnaby Lake Station",
+        "line": [
+          "Millennium"
+        ],
+        "region": "Metro Vancouver",
+        "system": "SkyTrain",
+        "source": "TransLink GTFS Static Data",
+        "source_feed_date": "2026-05-01",
+        "area": "Metro Vancouver"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.963998,
+          49.259195
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "station_id": "99935",
+        "station_name": "Stadium-Chinatown",
+        "full_station_name": "Stadium-Chinatown Station",
+        "line": [
+          "Expo"
+        ],
+        "region": "Metro Vancouver",
+        "system": "SkyTrain",
+        "source": "TransLink GTFS Static Data",
+        "source_feed_date": "2026-05-01",
+        "area": "Metro Vancouver"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -123.109181,
+          49.279223
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "station_id": "99951",
+        "station_name": "Surrey Central",
+        "full_station_name": "Surrey Central Station",
+        "line": [
+          "Expo"
+        ],
+        "region": "Metro Vancouver",
+        "system": "SkyTrain",
+        "source": "TransLink GTFS Static Data",
+        "source_feed_date": "2026-05-01",
+        "area": "Metro Vancouver"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -122.847868,
+          49.189562
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "station_id": "99903",
+        "station_name": "Templeton",
+        "full_station_name": "Templeton Station",
+        "line": [
+          "Canada"
+        ],
+        "region": "Metro Vancouver",
+        "system": "SkyTrain",
+        "source": "TransLink GTFS Static Data",
+        "source_feed_date": "2026-05-01",
+        "area": "Metro Vancouver"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -123.146337,
+          49.196688
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "station_id": "99916",
+        "station_name": "VCC-Clark",
+        "full_station_name": "VCC-Clark Station",
+        "line": [
+          "Millennium"
+        ],
+        "region": "Metro Vancouver",
+        "system": "SkyTrain",
+        "source": "TransLink GTFS Static Data",
+        "source_feed_date": "2026-05-01",
+        "area": "Metro Vancouver"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -123.079069,
+          49.265845
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "station_id": "99915",
+        "station_name": "Vancouver City Centre",
+        "full_station_name": "Vancouver City Centre Station",
+        "line": [
+          "Canada"
+        ],
+        "region": "Metro Vancouver",
+        "system": "SkyTrain",
+        "source": "TransLink GTFS Static Data",
+        "source_feed_date": "2026-05-01",
+        "area": "Metro Vancouver"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -123.118227,
+          49.282415
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "station_id": "12034",
+        "station_name": "Waterfront",
+        "full_station_name": "Waterfront Station",
+        "line": [
+          "Expo",
+          "Canada"
+        ],
+        "region": "Metro Vancouver",
+        "system": "SkyTrain",
+        "source": "TransLink GTFS Static Data",
+        "source_feed_date": "2026-05-01",
+        "area": "Metro Vancouver"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -123.111773,
+          49.285687
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "station_id": "99901",
+        "station_name": "YVR-Airport",
+        "full_station_name": "YVR-Airport Station",
+        "line": [
+          "Canada"
+        ],
+        "region": "Metro Vancouver",
+        "system": "SkyTrain",
+        "source": "TransLink GTFS Static Data",
+        "source_feed_date": "2026-05-01",
+        "area": "Metro Vancouver"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -123.178269,
+          49.194174
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "station_id": "99914",
+        "station_name": "Yaletown-Roundhouse",
+        "full_station_name": "Yaletown-Roundhouse Station",
+        "line": [
+          "Canada"
+        ],
+        "region": "Metro Vancouver",
+        "system": "SkyTrain",
+        "source": "TransLink GTFS Static Data",
+        "source_feed_date": "2026-05-01",
+        "area": "Metro Vancouver"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -123.122079,
+          49.274492
+        ]
+      }
+    }
+  ]
+}

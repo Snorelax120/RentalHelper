@@ -1,0 +1,40 @@
+{
+  "manifest_version": 3,
+  "name": "Vancouver Transit Overlay",
+  "description": "Overlays Vancouver SkyTrain station markers on Facebook Marketplace maps.",
+  "version": "0.1.0",
+  "permissions": ["storage"],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.facebook.com/marketplace/*",
+        "https://web.facebook.com/marketplace/*"
+      ],
+      "css": ["vendor/leaflet.css", "content.css"],
+      "js": [
+        "vendor/leaflet.js",
+        "scripts/config.js",
+        "scripts/storage-debug.js",
+        "scripts/sync.js",
+        "scripts/map-detector.js",
+        "scripts/overlay.js",
+        "scripts/diagnostics.js",
+        "scripts/debug-bridge.js",
+        "content.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "data/vancouver-stations.geojson",
+        "scripts/page-debug-bridge.js"
+      ],
+      "matches": [
+        "https://www.facebook.com/*",
+        "https://web.facebook.com/*"
+      ]
+    }
+  ]
+}
