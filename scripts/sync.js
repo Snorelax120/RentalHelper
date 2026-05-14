@@ -1,6 +1,20 @@
 (() => {
   const T = window.TransitOverlay;
   const { config, state, utils } = T;
+  const pendingZoomSync = {
+    settleTimer: 0,
+    maxTimer: 0,
+    intentTimer: 0,
+    stabilityFrame: 0,
+    signature: "",
+    urlZoomSignature: "",
+    hostSignature: "",
+    lastHostChangeAt: 0,
+    startedAt: 0,
+    previousView: null,
+    nextView: null,
+    resolvedView: null
+  };
 
   function startUrlPolling() {
     state.lastHref = window.location.href;
@@ -52,6 +66,8 @@
           href: window.location.href
         });
       }
+      T.panSmoothing?.clear("no map state");
+      clearPendingZoomSync("no map state");
       state.lastViewSource = "none";
       state.lastParsedView = null;
       state.lastView = null;
@@ -62,6 +78,8 @@
     }
 
     const resolvedView = applyHostTileZoom(view);
+    observeUrlZoomIntent(window.location.href);
+
     const adjustedZoom = resolvedView.zoom + state.calibration.zoomOffset;
     const nextView = {
       lat: resolvedView.lat + state.calibration.latOffset,
@@ -79,6 +97,17 @@
       return;
     }
 
+    const previousView = state.lastView;
+    if (shouldDeferMapSync(previousView, nextView)) {
+      schedulePendingZoomSync(previousView, nextView, resolvedView);
+      return;
+    }
+
+    clearPendingZoomSync("immediate sync");
+    applyLeafletView(previousView, nextView, resolvedView);
+  }
+
+  function applyLeafletView(previousView, nextView, resolvedView) {
     state.lastView = nextView;
     state.lastParsedView = resolvedView;
     state.lastViewSource = resolvedView.source;
@@ -86,6 +115,7 @@
     state.leafletMap.setView([nextView.lat, nextView.lng], nextView.zoom, {
       animate: false
     });
+    T.panSmoothing?.handleAuthoritativeSync(previousView, nextView);
     utils.debugLog("Leaflet view synced", {
       source: resolvedView.source,
       parsedView: resolvedView,
@@ -97,6 +127,313 @@
     });
     T.overlay.updateOverlayVisibility();
     T.debug.updateDebugPanel();
+  }
+
+  function shouldDeferMapSync(previousView, nextView) {
+    if (!previousView || !nextView || !state.leafletMap) return false;
+    if (!state.overlayEnabled || !state.hasValidMapState) return false;
+    if (!state.leafletNode || !state.mapElement) return false;
+
+    return Boolean(state.zoomSync?.pending) || previousView.zoom !== nextView.zoom;
+  }
+
+  function schedulePendingZoomSync(previousView, nextView, resolvedView) {
+    const signature = [
+      nextView.lat,
+      nextView.lng,
+      nextView.zoom,
+      resolvedView.source
+    ].join("|");
+
+    pendingZoomSync.previousView = previousView;
+    pendingZoomSync.nextView = nextView;
+    pendingZoomSync.resolvedView = resolvedView;
+    window.clearTimeout(pendingZoomSync.intentTimer);
+    pendingZoomSync.intentTimer = 0;
+
+    if (signature === pendingZoomSync.signature && pendingZoomSync.settleTimer) {
+      return;
+    }
+
+    pendingZoomSync.signature = signature;
+    pendingZoomSync.startedAt = performance.now();
+    setZoomSyncPending(true, "settling");
+    T.panSmoothing?.clear("zoom settling");
+    T.stationHover?.clear();
+
+    window.clearTimeout(pendingZoomSync.settleTimer);
+    pendingZoomSync.settleTimer = window.setTimeout(() => {
+      pendingZoomSync.settleTimer = 0;
+      scheduleStabilityCheck();
+    }, config.ZOOM_SYNC_SETTLE_MS);
+
+    window.clearTimeout(pendingZoomSync.maxTimer);
+    pendingZoomSync.maxTimer = window.setTimeout(applyPendingZoomSync, config.ZOOM_SYNC_MAX_MS);
+
+    scheduleStabilityCheck();
+  }
+
+  function applyPendingZoomSync() {
+    if (!pendingZoomSync.nextView || !pendingZoomSync.resolvedView) return;
+
+    const previousView = pendingZoomSync.previousView;
+    const nextView = pendingZoomSync.nextView;
+    const resolvedView = pendingZoomSync.resolvedView;
+
+    clearPendingZoomSync("applying", { keepHidden: true });
+    applyLeafletView(previousView, nextView, resolvedView);
+
+    window.requestAnimationFrame(() => {
+      setZoomSyncPending(false, "applied");
+      T.debug.updateDebugPanel();
+    });
+  }
+
+  function clearPendingZoomSync(reason, options = {}) {
+    window.clearTimeout(pendingZoomSync.settleTimer);
+    window.clearTimeout(pendingZoomSync.maxTimer);
+    window.clearTimeout(pendingZoomSync.intentTimer);
+    if (pendingZoomSync.stabilityFrame) {
+      window.cancelAnimationFrame(pendingZoomSync.stabilityFrame);
+    }
+    pendingZoomSync.settleTimer = 0;
+    pendingZoomSync.maxTimer = 0;
+    pendingZoomSync.intentTimer = 0;
+    pendingZoomSync.stabilityFrame = 0;
+    pendingZoomSync.signature = "";
+    pendingZoomSync.hostSignature = "";
+    pendingZoomSync.lastHostChangeAt = 0;
+    pendingZoomSync.startedAt = 0;
+    pendingZoomSync.previousView = null;
+    pendingZoomSync.nextView = null;
+    pendingZoomSync.resolvedView = null;
+
+    if (!options.keepHidden) {
+      setZoomSyncPending(false, reason);
+    }
+  }
+
+  function setZoomSyncPending(pending, reason) {
+    const frozenRects = pending ? getFrozenZoomRects() : { overlayRect: null, toggleRect: null };
+
+    state.zoomSync = {
+      pending,
+      reason,
+      overlayRect: frozenRects.overlayRect,
+      toggleRect: frozenRects.toggleRect
+    };
+
+    if (state.leafletNode) {
+      state.leafletNode.classList.toggle("transit-zoom-settling", pending);
+      state.leafletNode.style.visibility = pending ? "hidden" : "";
+    }
+
+    if (state.overlay) {
+      state.overlay.classList.toggle("transit-zoom-settling", pending);
+      state.overlay.style.visibility = pending ? "hidden" : "";
+    }
+
+    if (pending) {
+      applyFrozenZoomRects(frozenRects);
+    } else {
+      T.overlay.scheduleAlign();
+    }
+  }
+
+  function getFrozenZoomRects() {
+    if (state.zoomSync?.pending && state.zoomSync.overlayRect && state.zoomSync.toggleRect) {
+      return {
+        overlayRect: state.zoomSync.overlayRect,
+        toggleRect: state.zoomSync.toggleRect
+      };
+    }
+
+    return {
+      overlayRect: getElementRect(state.overlay),
+      toggleRect: getElementRect(state.toggle)
+    };
+  }
+
+  function getElementRect(element) {
+    if (!element) return null;
+
+    const rect = element.getBoundingClientRect();
+    return {
+      top: rect.top,
+      left: rect.left,
+      width: rect.width,
+      height: rect.height,
+      right: rect.right,
+      bottom: rect.bottom
+    };
+  }
+
+  function applyFrozenZoomRects({ overlayRect, toggleRect }) {
+    if (state.overlay && overlayRect) {
+      Object.assign(state.overlay.style, {
+        top: `${overlayRect.top}px`,
+        left: `${overlayRect.left}px`,
+        width: `${overlayRect.width}px`,
+        height: `${overlayRect.height}px`
+      });
+    }
+
+    if (state.toggle && toggleRect) {
+      Object.assign(state.toggle.style, {
+        top: `${toggleRect.top}px`,
+        left: `${toggleRect.left}px`
+      });
+    }
+  }
+
+  function beginZoomSettle(reason = "zoom intent") {
+    if (!state.overlayEnabled || !state.hasValidMapState || !state.leafletNode || !state.mapElement) return;
+
+    setZoomSyncPending(true, reason);
+    T.panSmoothing?.clear(reason);
+    T.stationHover?.clear();
+    pendingZoomSync.startedAt ||= performance.now();
+
+    window.clearTimeout(pendingZoomSync.intentTimer);
+    pendingZoomSync.intentTimer = window.setTimeout(() => {
+      pendingZoomSync.intentTimer = 0;
+      scheduleStabilityCheck();
+    }, config.ZOOM_INTENT_CLEAR_MS);
+
+    scheduleStabilityCheck();
+    T.debug.updateDebugPanel();
+  }
+
+  function scheduleStabilityCheck() {
+    if (!state.zoomSync?.pending || pendingZoomSync.stabilityFrame) return;
+
+    pendingZoomSync.stabilityFrame = window.requestAnimationFrame(() => {
+      pendingZoomSync.stabilityFrame = 0;
+      checkZoomStability();
+    });
+  }
+
+  function checkZoomStability() {
+    if (!state.zoomSync?.pending) return;
+
+    const now = performance.now();
+    const signature = getHostMapStabilitySignature();
+    const changed = signature && signature !== pendingZoomSync.hostSignature;
+
+    if (!pendingZoomSync.startedAt) pendingZoomSync.startedAt = now;
+
+    if (changed) {
+      pendingZoomSync.hostSignature = signature;
+      pendingZoomSync.lastHostChangeAt = now;
+    } else if (!pendingZoomSync.lastHostChangeAt) {
+      pendingZoomSync.lastHostChangeAt = now;
+    }
+
+    const stableFor = now - pendingZoomSync.lastHostChangeAt;
+    const elapsed = now - pendingZoomSync.startedAt;
+    const hasSettled = stableFor >= config.ZOOM_SYNC_STABLE_MS;
+    const hitMax = elapsed >= config.ZOOM_SYNC_MAX_MS;
+    const waitingForZoomTile =
+      pendingZoomSync.nextView &&
+      pendingZoomSync.previousView &&
+      pendingZoomSync.nextView.zoom === pendingZoomSync.previousView.zoom;
+
+    if (pendingZoomSync.nextView && ((hasSettled && !waitingForZoomTile) || hitMax)) {
+      applyPendingZoomSync();
+      return;
+    }
+
+    if (!pendingZoomSync.nextView && !pendingZoomSync.intentTimer && (hasSettled || hitMax)) {
+      clearPendingZoomSync(hitMax ? "zoom intent max wait" : "zoom intent stable");
+      T.debug.updateDebugPanel();
+      return;
+    }
+
+    scheduleStabilityCheck();
+  }
+
+  function getHostMapStabilitySignature() {
+    if (!state.mapElement) return "";
+
+    const mapRect = state.mapElement.getBoundingClientRect();
+    const pane = state.mapElement.querySelector(".leaflet-map-pane");
+    const paneTransform = pane ? window.getComputedStyle(pane).transform : "none";
+    const tiles = Array.from(state.mapElement.querySelectorAll("img[src]"))
+      .map((image) => {
+        const src = image.currentSrc || image.src || image.getAttribute("src");
+        const zoom = parseFacebookMapTileZoom(src);
+        if (!utils.isValidZoom(zoom)) return null;
+
+        const rect = image.getBoundingClientRect();
+        const visibleArea = getIntersectionArea(mapRect, rect);
+        if (visibleArea <= 0) return null;
+
+        return [
+          zoom,
+          Math.round(rect.left / 4),
+          Math.round(rect.top / 4),
+          Math.round(rect.width / 4),
+          Math.round(rect.height / 4),
+          getMapTileKey(src)
+        ].join(":");
+      })
+      .filter(Boolean)
+      .sort()
+      .slice(0, 16)
+      .join("|");
+
+    return [
+      Math.round(mapRect.left),
+      Math.round(mapRect.top),
+      Math.round(mapRect.width),
+      Math.round(mapRect.height),
+      paneTransform,
+      tiles
+    ].join(";");
+  }
+
+  function getMapTileKey(src) {
+    if (!src) return "";
+
+    try {
+      const url = new URL(src, window.location.href);
+      return ["x", "y", "z"].map((name) => `${name}${url.searchParams.get(name) || ""}`).join("");
+    } catch (_error) {
+      return src.slice(0, 120);
+    }
+  }
+
+  function observeUrlZoomIntent(href) {
+    const signature = getUrlZoomSignature(href);
+    const changed = Boolean(
+      pendingZoomSync.urlZoomSignature &&
+        signature &&
+        signature !== pendingZoomSync.urlZoomSignature
+    );
+
+    pendingZoomSync.urlZoomSignature = signature;
+
+    if (changed) {
+      beginZoomSettle("url zoom/radius change");
+    }
+  }
+
+  function getUrlZoomSignature(href) {
+    let url;
+    try {
+      url = new URL(href);
+    } catch (_error) {
+      return "";
+    }
+
+    const parts = [];
+    const names = ["radius", "mapZoom", "zoomLevel", "mapZoomLevel", "zoom"];
+    for (const name of names) {
+      const value = url.searchParams.get(name);
+      if (value !== null) parts.push(`${name}=${value}`);
+    }
+
+    return parts.join("|");
   }
 
   function applyHostTileZoom(view) {
@@ -493,6 +830,7 @@
     installHistoryHooks,
     startUrlPolling,
     schedule,
+    beginZoomSettle,
     parseMapViewFromUrl,
     getHostTileZoom
   };

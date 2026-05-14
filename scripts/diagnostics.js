@@ -75,6 +75,9 @@
       lastView: state.lastView,
       lastViewSource: state.lastViewSource,
       lastHostTileZoom: state.lastHostTileZoom,
+      panSmoothing: state.panSmoothing,
+      zoomSync: state.zoomSync,
+      visibleLines: state.visibleLines,
       currentHostTileZoom: T.sync.getHostTileZoom(),
       calibration: state.calibration
     };

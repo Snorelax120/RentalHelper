@@ -62,32 +62,86 @@
       markerZoomAnimation: false
     }).setView(config.DEFAULT_CENTER, config.DEFAULT_ZOOM);
 
-    await loadStations();
+    ensurePanes();
+    await loadTransitData();
+    refreshTransitLayers();
   }
 
-  async function loadStations() {
-    if (state.stationsLayer) return;
+  function ensurePanes() {
+    state.leafletMap.createPane("transit-lines");
+    state.leafletMap.createPane("transit-stations");
 
-    const url = chrome.runtime.getURL("data/vancouver-stations.geojson");
-    const response = await fetch(url);
-    const geojson = await response.json();
+    const linesPane = state.leafletMap.getPane("transit-lines");
+    const stationsPane = state.leafletMap.getPane("transit-stations");
+    linesPane.style.zIndex = "350";
+    linesPane.style.pointerEvents = "none";
+    stationsPane.style.zIndex = "450";
+    stationsPane.style.pointerEvents = "none";
+  }
 
-    state.stationsLayer = L.geoJSON(geojson, {
+  async function loadTransitData() {
+    if (state.stationsGeojson && state.linesGeojson) return;
+
+    const [stations, lines] = await Promise.all([
+      fetch(chrome.runtime.getURL("data/vancouver-stations.geojson")).then((response) => response.json()),
+      fetch(chrome.runtime.getURL("data/vancouver-lines.geojson")).then((response) => response.json())
+    ]);
+
+    state.stationsGeojson = stations;
+    state.linesGeojson = lines;
+  }
+
+  function refreshTransitLayers() {
+    if (!state.leafletMap || !state.stationsGeojson || !state.linesGeojson) return;
+
+    if (state.linesLayer) {
+      state.linesLayer.remove();
+      state.linesLayer = null;
+    }
+
+    if (state.stationsLayer) {
+      state.stationsLayer.remove();
+      state.stationsLayer = null;
+    }
+
+    state.linesLayer = L.geoJSON(state.linesGeojson, {
+      pane: "transit-lines",
+      interactive: false,
+      filter: isLineFeatureVisible,
+      style(feature) {
+        const line = feature.properties?.line;
+        return {
+          color: config.lineColors[line] || "#102033",
+          weight: 4,
+          opacity: line === "Millennium" ? 0.82 : 0.72,
+          lineCap: "round",
+          lineJoin: "round",
+          className: "transit-route-line"
+        };
+      }
+    }).addTo(state.leafletMap);
+
+    state.stationsLayer = L.geoJSON(state.stationsGeojson, {
+      filter: isStationFeatureVisible,
       pointToLayer(feature, latlng) {
         const lines = normalizeLines(feature.properties?.line);
         const color = getStationColor(lines);
+        const shared = lines.length > 1;
         return L.circleMarker(latlng, {
-          radius: 6,
-          weight: 2,
-          color,
-          fillColor: "#ffffff",
-          fillOpacity: 0.92,
-          opacity: 0.95,
+          pane: "transit-stations",
+          radius: shared ? 6.5 : 5.5,
+          weight: shared ? 2.5 : 2,
+          color: shared ? "#102033" : "#ffffff",
+          fillColor: shared ? "#ffffff" : color,
+          fillOpacity: 0.96,
+          opacity: 1,
           interactive: false,
-          className: "transit-station-marker"
+          className: `transit-station-marker${shared ? " transit-station-marker-shared" : ""}`
         });
       }
     }).addTo(state.leafletMap);
+
+    T.stationHover?.clear();
   }
 
   function normalizeLines(value) {
@@ -101,6 +155,29 @@
     return "#102033";
   }
 
+  function isLineFeatureVisible(feature) {
+    const line = feature.properties?.line;
+    return state.visibleLines?.[line] !== false;
+  }
+
+  function isStationFeatureVisible(feature) {
+    const lines = normalizeLines(feature.properties?.line);
+    return lines.some((line) => state.visibleLines?.[line] !== false);
+  }
+
+  function setVisibleLines(nextVisibleLines) {
+    state.visibleLines = T.debug.normalizeVisibleLines({
+      ...state.visibleLines,
+      ...nextVisibleLines
+    });
+
+    if (chrome?.storage?.local) {
+      chrome.storage.local.set({ [config.LINE_VISIBILITY_STORAGE_KEY]: state.visibleLines });
+    }
+
+    refreshTransitLayers();
+  }
+
   function scheduleAlign() {
     if (state.alignFrame) return;
 
@@ -112,10 +189,13 @@
 
   function alignOverlay() {
     if (!state.mapElement || !state.overlay || !state.toggle) return;
+    if (state.zoomSync?.pending) return;
 
     const rect = T.map.getVisibleRect(state.mapElement);
 
     if (!rect) {
+      T.panSmoothing?.clear("map rect unavailable");
+      T.stationHover?.clear();
       state.overlay.hidden = true;
       state.toggle.hidden = true;
       if (state.debugPanel) state.debugPanel.hidden = true;
@@ -159,13 +239,20 @@
 
   function updateOverlayVisibility() {
     if (!state.overlay) return;
-    state.overlay.hidden = !(state.overlayEnabled && state.hasValidMapState);
+    const hidden = !(state.overlayEnabled && state.hasValidMapState);
+    if (hidden) {
+      T.panSmoothing?.clear("overlay hidden");
+      T.stationHover?.clear();
+    }
+    state.overlay.hidden = hidden;
   }
 
   T.overlay = {
     createOverlay,
     createToggle,
     initializeLeaflet,
+    refreshTransitLayers,
+    setVisibleLines,
     scheduleAlign,
     updateOverlayVisibility
   };

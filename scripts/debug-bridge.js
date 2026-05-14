@@ -5,6 +5,8 @@
   const RESPONSE_EVENT = "transit-overlay-debug-response";
   const PAGE_BRIDGE_PATH = "scripts/page-debug-bridge.js";
 
+  if (!config.DEBUG) return;
+
   const methods = {
     ping: () => ({
       ok: true,
@@ -16,6 +18,9 @@
       lastParsedView: state.lastParsedView,
       lastView: state.lastView,
       lastHostTileZoom: state.lastHostTileZoom,
+      panSmoothing: state.panSmoothing,
+      zoomSync: state.zoomSync,
+      visibleLines: state.visibleLines,
       currentHostTileZoom: T.sync.getHostTileZoom(),
       calibration: state.calibration
     }),

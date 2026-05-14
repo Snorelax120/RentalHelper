@@ -7,7 +7,8 @@
       if (!chrome?.storage?.local) {
         resolve({
           overlayEnabled: true,
-          calibration: { ...config.DEFAULT_CALIBRATION }
+          calibration: { ...config.DEFAULT_CALIBRATION },
+          visibleLines: { ...config.DEFAULT_VISIBLE_LINES }
         });
         return;
       }
@@ -15,12 +16,14 @@
       chrome.storage.local.get(
         {
           [config.STORAGE_KEY]: true,
-          [config.CALIBRATION_STORAGE_KEY]: config.DEFAULT_CALIBRATION
+          [config.CALIBRATION_STORAGE_KEY]: config.DEFAULT_CALIBRATION,
+          [config.LINE_VISIBILITY_STORAGE_KEY]: config.DEFAULT_VISIBLE_LINES
         },
         (result) => {
           resolve({
             overlayEnabled: Boolean(result[config.STORAGE_KEY]),
-            calibration: normalizeCalibration(result[config.CALIBRATION_STORAGE_KEY])
+            calibration: normalizeCalibration(result[config.CALIBRATION_STORAGE_KEY]),
+            visibleLines: normalizeVisibleLines(result[config.LINE_VISIBILITY_STORAGE_KEY])
           });
         }
       );
@@ -43,6 +46,12 @@
   function parseCalibrationNumber(value, fallback) {
     const number = Number(value);
     return Number.isFinite(number) ? number : fallback;
+  }
+
+  function normalizeVisibleLines(value) {
+    return Object.fromEntries(
+      config.lineNames.map((line) => [line, value?.[line] !== false])
+    );
   }
 
   function persistCalibration() {
@@ -135,9 +144,14 @@
     const parsedView = state.lastParsedView;
     const calibration = state.calibration;
     const hostZoom = state.lastHostTileZoom?.zoom;
+    const smoothing = state.panSmoothing;
+    const smoothingText = smoothing?.active
+      ? `${smoothing.source} ${smoothing.dx.toFixed(0)},${smoothing.dy.toFixed(0)}`
+      : "off";
+    const zoomSyncText = state.zoomSync?.pending ? "settling" : "off";
     readout.textContent = view
-      ? `applied z ${view.zoom.toFixed(2)} raw z ${parsedView?.zoom.toFixed(2) ?? "?"} host z ${hostZoom ?? "?"} | ${view.lat.toFixed(5)}, ${view.lng.toFixed(5)} | ${state.lastViewSource} | cal z ${calibration.zoomOffset.toFixed(2)} lat ${calibration.latOffset.toFixed(5)} lng ${calibration.lngOffset.toFixed(5)}`
-      : `No parsed map state | cal z ${calibration.zoomOffset.toFixed(2)} lat ${calibration.latOffset.toFixed(5)} lng ${calibration.lngOffset.toFixed(5)}`;
+      ? `applied z ${view.zoom.toFixed(2)} raw z ${parsedView?.zoom.toFixed(2) ?? "?"} host z ${hostZoom ?? "?"} | ${view.lat.toFixed(5)}, ${view.lng.toFixed(5)} | pan ${smoothingText} zoom ${zoomSyncText} | ${state.lastViewSource} | cal z ${calibration.zoomOffset.toFixed(2)} lat ${calibration.latOffset.toFixed(5)} lng ${calibration.lngOffset.toFixed(5)}`
+      : `No parsed map state | pan ${smoothingText} zoom ${zoomSyncText} | cal z ${calibration.zoomOffset.toFixed(2)} lat ${calibration.latOffset.toFixed(5)} lng ${calibration.lngOffset.toFixed(5)}`;
   }
 
   function positionDebugPanel(rect) {
@@ -151,6 +165,7 @@
 
   T.debug = {
     getStoredSettings,
+    normalizeVisibleLines,
     createDebugPanel,
     updateDebugPanel,
     positionDebugPanel

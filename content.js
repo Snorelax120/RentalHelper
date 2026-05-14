@@ -20,11 +20,14 @@
     const storedSettings = await T.debug.getStoredSettings();
     state.overlayEnabled = storedSettings.overlayEnabled;
     state.calibration = storedSettings.calibration;
+    state.visibleLines = storedSettings.visibleLines;
 
     T.sync.installHistoryHooks();
     T.overlay.createOverlay();
     T.overlay.createToggle();
     T.debug.createDebugPanel();
+    T.panSmoothing.start();
+    T.stationHover.start();
     T.map.start();
     T.sync.startUrlPolling();
 

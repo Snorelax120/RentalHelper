@@ -20,6 +20,20 @@
   width: 100%;
   height: 100%;
   background: transparent;
+  transform-origin: 0 0;
+  transition: none;
+}
+
+#transit-leaflet-map.transit-zoom-settling {
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+
+#transit-leaflet-map.transit-zoom-settling .leaflet-pane,
+#transit-leaflet-map.transit-zoom-settling svg,
+#transit-leaflet-map.transit-zoom-settling canvas {
+  opacity: 0 !important;
+  visibility: hidden !important;
 }
 
 #transit-overlay-container .leaflet-container {
@@ -135,4 +149,33 @@
   color: #102033;
   font: 600 12px/1.25 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+}
+
+#transit-station-hover {
+  position: fixed;
+  z-index: 503;
+  max-width: 180px;
+  padding: 6px 8px;
+  border: 1px solid rgba(10, 21, 32, 0.22);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.96);
+  color: #102033;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  font: 600 12px/1.25 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  pointer-events: none;
+}
+
+#transit-station-hover[hidden] {
+  display: none;
+}
+
+.transit-station-hover-name {
+  white-space: nowrap;
+}
+
+.transit-station-hover-lines {
+  margin-top: 2px;
+  color: #4b5a6a;
+  font-size: 11px;
+  font-weight: 500;
 }

@@ -6,14 +6,14 @@ Build a Chrome/Chromium Manifest V3 extension that overlays Vancouver SkyTrain s
 
 The first version is Vancouver-specific by design. Future global support can build on the same overlay and data-loading architecture, but it should not complicate the MVP.
 
-The MVP renders static station location data only:
+The MVP renders static bundled transit geometry:
 
 - No schedules
 - No live arrivals
 - No alerts
 - No external transit APIs
 - No buses, SeaBus, West Coast Express, or global city support
-- No route line geometry required for the first successful release
+- Station markers and simplified station-to-station SkyTrain route lines
 
 ## Success Criteria
 
@@ -21,12 +21,13 @@ The project is successful when:
 
 - The extension loads as an unpacked Chrome/Chromium MV3 extension.
 - It runs only on Facebook Marketplace map pages.
-- Vancouver SkyTrain station markers appear over the Facebook Marketplace map.
-- Station markers stay visually aligned while the Facebook map pans and zooms.
+- Vancouver SkyTrain station markers and route lines appear over the Facebook Marketplace map.
+- Transit geometry stays visually aligned while the Facebook map pans and zooms.
 - The Facebook map and listing interactions still work through the overlay.
 - A compact Transit toggle can show or hide the station overlay.
 - The toggle state persists across page refreshes and browser sessions.
 - All station data is bundled locally in the extension.
+- Route-line data is bundled locally in the extension.
 - No external transit API calls are made.
 - Normal usage does not produce major console errors.
 
@@ -42,9 +43,10 @@ Core architecture:
 
 - Host: Facebook Marketplace map.
 - Overlay: a fixed-position transparent `div` containing a tileless Leaflet map.
-- Renderer: Leaflet markers backed by bundled GeoJSON station data.
-- Sync source: Facebook Marketplace URL latitude, longitude, and zoom parameters.
-- Fallback sync: history listeners and periodic URL polling.
+- Renderer: Leaflet route lines and markers backed by bundled GeoJSON data.
+- Center sync source: Facebook Marketplace URL latitude and longitude parameters.
+- Zoom sync source: Facebook map tile URLs when available.
+- Fallback sync: history listeners, periodic polling, and default zoom only before tile zoom is known.
 - Interactions: overlay is click-through by default using `pointer-events: none`.
 - Controls: the Transit toggle uses `pointer-events: auto`.
 
@@ -61,6 +63,7 @@ vendor/
   leaflet.css
 data/
   vancouver-stations.geojson
+  vancouver-lines.geojson
 ```
 
 Optional supporting files:
@@ -91,6 +94,7 @@ Web-accessible resources:
 - `vendor/leaflet.js`
 - `vendor/leaflet.css`
 - `data/vancouver-stations.geojson`
+- `data/vancouver-lines.geojson`
 - Leaflet image assets if the local Leaflet build requires them.
 
 The content script should inject or load Leaflet assets from the extension bundle, not from a CDN.
@@ -133,7 +137,7 @@ Notes:
 
 - Coordinates must use GeoJSON order: longitude, latitude.
 - Shared stations should use an array for `line`, for example `["Expo", "Millennium"]`.
-- Route line geometry is future work and should not block the MVP.
+- Simplified route line geometry is supported with station-to-station `LineString` features.
 - Static station data can be manually maintained for the Vancouver-only version.
 
 ## Map Detection
@@ -203,7 +207,7 @@ Facebook's map handles all user interaction. Leaflet mirrors the visible map sta
 
 Load `data/vancouver-stations.geojson` with `chrome.runtime.getURL()` and `fetch()`.
 
-Render only station markers for the MVP.
+Render station markers above simplified route lines.
 
 Recommended marker styling:
 
@@ -222,10 +226,22 @@ Line color mapping for station styling:
 - Canada: `#00A7E1`
 - Shared station fallback: dark neutral stroke with a white fill.
 
-Optional MVP interactivity:
+MVP interactivity:
 
 - Station hover tooltip with station name and line.
-- Keep this lightweight and ensure it does not interfere with listing clicks.
+- Keep hover non-intercepting so Marketplace listing clicks still pass through.
+
+## Route Line Rendering
+
+Load `data/vancouver-lines.geojson` with `chrome.runtime.getURL()` and `fetch()`.
+
+Route line behavior:
+
+- Render station-to-station `LineString` features below station markers.
+- Include Expo main branch, Expo Production Way branch, Millennium Line, Canada Richmond branch, and Canada YVR branch.
+- Keep route lines `pointer-events: none`.
+- Use line-specific colors with moderate opacity.
+- Store line visibility for Expo, Millennium, and Canada in `chrome.storage.local`; default all visible.
 
 ## Synchronization Engine
 
@@ -233,7 +249,8 @@ The extension should mirror Facebook's current map state into Leaflet.
 
 Primary sync:
 
-- Parse latitude, longitude, and zoom from the Facebook Marketplace URL when available.
+- Parse latitude and longitude from the Facebook Marketplace URL when available.
+- Read the current Facebook map tile `z` value from visible `map_tile.php` image URLs when available.
 - Call `leafletMap.setView([latitude, longitude], adjustedZoom, { animate: false })`.
 
 URL monitoring:
@@ -247,7 +264,8 @@ Performance requirements:
 
 - Throttle sync work with `requestAnimationFrame` or a short debounce.
 - Avoid calling `setView()` when the parsed center and zoom have not changed.
-- Keep a configurable zoom offset, defaulting to `0`, so Facebook and Leaflet zoom levels can be tuned during manual testing.
+- Keep a configurable zoom offset, defaulting to `0`, for development-only calibration.
+- Use visual pan smoothing during drag so stations move with Facebook's map while URL state catches up.
 
 Failure behavior:
 
@@ -284,12 +302,14 @@ Recommended placement:
 7. Inject and align the transparent overlay.
 8. Initialize a tileless, non-interactive Leaflet map.
 9. Load and render station GeoJSON markers.
-10. Implement URL/history-based map synchronization.
-11. Add the Transit toggle button.
-12. Persist toggle state with `chrome.storage.local`.
-13. Test on Facebook Marketplace Vancouver map pages.
-14. Tune marker style, overlay `z-index`, and zoom offset.
-15. Document installation and manual testing steps in `README.md`.
+10. Load and render route-line GeoJSON.
+11. Implement URL center and tile-zoom synchronization.
+12. Add pan smoothing during map drag.
+13. Add hover-only station details.
+14. Add the Transit toggle button.
+15. Persist toggle and line visibility state with `chrome.storage.local`.
+16. Test on Facebook Marketplace Vancouver map pages.
+17. Document installation and manual testing steps in `README.md`.
 
 ## Test Plan
 
@@ -300,8 +320,10 @@ Manual Chrome extension testing:
 - Navigate to a Vancouver map search.
 - Confirm the extension activates only on Marketplace pages.
 - Confirm Vancouver SkyTrain stations appear over the map.
+- Confirm route lines appear below station markers.
 - Pan the Facebook map and confirm markers remain aligned.
 - Zoom the Facebook map and confirm markers remain aligned.
+- Hover known stations and confirm non-intercepting station details appear.
 - Resize the browser and confirm the overlay still matches the map bounds.
 - Scroll the page and confirm the overlay remains positioned over the map.
 - Click Marketplace listings and confirm clicks pass through the overlay.
@@ -315,6 +337,8 @@ Manual Chrome extension testing:
 Data validation:
 
 - Validate `data/vancouver-stations.geojson` as legal GeoJSON.
+- Validate `data/vancouver-lines.geojson` as legal GeoJSON.
+- Run `node scripts/validate-data.js`.
 - Confirm every feature is a `Point`.
 - Confirm every feature has `station_name`.
 - Confirm every feature has `line`.
@@ -342,7 +366,8 @@ Leaflet and Facebook zoom mismatch:
 Overlay blocking Marketplace interactions:
 
 - Keep the overlay container `pointer-events: none`.
-- Enable pointer events only on the toggle button and optional station tooltip targets.
+- Enable pointer events only on the Transit toggle.
+- Keep station markers, route lines, and hover tooltips click-through.
 
 Stale station data:
 
@@ -360,7 +385,7 @@ Do not include these in the MVP unless the MVP is already stable:
 
 - Global city support.
 - Multiple transit agencies.
-- Route line geometry.
+- Exact GTFS track geometry.
 - Bus, SeaBus, or West Coast Express data.
 - Schedule lookup.
 - Live arrivals.

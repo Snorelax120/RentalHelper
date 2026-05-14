@@ -1,12 +1,13 @@
 (() => {
   const config = {
-    DEBUG: true,
+    DEBUG: false,
     LOG_PREFIX: "[Transit Overlay]",
     OVERLAY_ID: "transit-overlay-container",
     TOGGLE_ID: "transit-overlay-toggle",
     DEBUG_PANEL_ID: "transit-debug-panel",
     STORAGE_KEY: "vancouverTransitOverlayEnabled",
     CALIBRATION_STORAGE_KEY: "vancouverTransitOverlayCalibration",
+    LINE_VISIBILITY_STORAGE_KEY: "vancouverTransitVisibleLines",
     DEFAULT_CENTER: [49.2827, -123.1207],
     DEFAULT_ZOOM: 13,
     CALIBRATION_VERSION: 5,
@@ -18,12 +19,26 @@
     },
     ALIGN_INTERVAL_MS: 500,
     URL_POLL_INTERVAL_MS: 250,
+    PAN_SMOOTHING_THRESHOLD_PX: 3,
+    PAN_SMOOTHING_SETTLE_MS: 1000,
+    ZOOM_SYNC_SETTLE_MS: 180,
+    ZOOM_SYNC_STABLE_MS: 180,
+    ZOOM_SYNC_MAX_MS: 1400,
+    ZOOM_INTENT_CLEAR_MS: 700,
+    STATION_HOVER_RADIUS_PX: 12,
+    STATION_TOOLTIP_OFFSET_PX: 12,
     MIN_MAP_WIDTH: 320,
     MIN_MAP_HEIGHT: 280,
     lineColors: {
       Expo: "#005596",
       Millennium: "#FFCD00",
       Canada: "#00A7E1"
+    },
+    lineNames: ["Expo", "Millennium", "Canada"],
+    DEFAULT_VISIBLE_LINES: {
+      Expo: true,
+      Millennium: true,
+      Canada: true
     },
     mapLatNames: ["mapLatitude", "mapLat", "map_latitude", "map_lat", "centerLatitude", "centerLat"],
     mapLngNames: [
@@ -57,9 +72,13 @@
     debugPanel: null,
     leafletMap: null,
     stationsLayer: null,
+    linesLayer: null,
+    stationsGeojson: null,
+    linesGeojson: null,
     resizeObserver: null,
     mutationObserver: null,
     overlayEnabled: true,
+    visibleLines: { ...config.DEFAULT_VISIBLE_LINES },
     calibration: { ...config.DEFAULT_CALIBRATION },
     hasValidMapState: false,
     lastHref: "",
@@ -67,6 +86,19 @@
     lastView: null,
     lastViewSource: "",
     lastHostTileZoom: null,
+    panSmoothing: {
+      active: false,
+      source: "none",
+      dx: 0,
+      dy: 0,
+      reason: ""
+    },
+    zoomSync: {
+      pending: false,
+      reason: "",
+      overlayRect: null,
+      toggleRect: null
+    },
     lastCandidateSignature: "",
     lastTopCandidatesSignature: "",
     lastOverlaySignature: "",

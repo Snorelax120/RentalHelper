@@ -18,6 +18,8 @@
         "scripts/sync.js",
         "scripts/map-detector.js",
         "scripts/overlay.js",
+        "scripts/pan-smoothing.js",
+        "scripts/station-hover.js",
         "scripts/diagnostics.js",
         "scripts/debug-bridge.js",
         "content.js"
@@ -29,6 +31,7 @@
     {
       "resources": [
         "data/vancouver-stations.geojson",
+        "data/vancouver-lines.geojson",
         "scripts/page-debug-bridge.js"
       ],
       "matches": [

@@ -1,0 +1,206 @@
+{
+  "type": "FeatureCollection",
+  "name": "vancouver-skytrain-lines",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "line": "Expo",
+        "branch": "King George",
+        "station_names": [
+          "Waterfront",
+          "Burrard",
+          "Granville",
+          "Stadium-Chinatown",
+          "Main Street-Science World",
+          "Commercial-Broadway",
+          "Nanaimo",
+          "29th Avenue",
+          "Joyce-Collingwood",
+          "Patterson",
+          "Metrotown",
+          "Royal Oak",
+          "Edmonds",
+          "22nd Street",
+          "New Westminster",
+          "Columbia",
+          "Scott Road",
+          "Gateway",
+          "Surrey Central",
+          "King George"
+        ],
+        "geometry_type": "station-to-station",
+        "source": "Derived from data/vancouver-stations.geojson"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [-123.111773, 49.285687],
+          [-123.119557, 49.285614],
+          [-123.115721, 49.283173],
+          [-123.109181, 49.279223],
+          [-123.100392, 49.273137],
+          [-123.068765, 49.26267],
+          [-123.055908, 49.248321],
+          [-123.046113, 49.244283],
+          [-123.031811, 49.238398],
+          [-123.01267, 49.229626],
+          [-123.00392, 49.225825],
+          [-122.98848, 49.220068],
+          [-122.959104, 49.211936],
+          [-122.94898, 49.200059],
+          [-122.912614, 49.201437],
+          [-122.906175, 49.20483],
+          [-122.874197, 49.20442],
+          [-122.85061, 49.198955],
+          [-122.847868, 49.189562],
+          [-122.844737, 49.18279]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "line": "Expo",
+        "branch": "Production Way-University",
+        "station_names": [
+          "Columbia",
+          "Sapperton",
+          "Braid",
+          "Lougheed Town Centre",
+          "Production Way-University"
+        ],
+        "geometry_type": "station-to-station",
+        "source": "Derived from data/vancouver-stations.geojson"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [-122.906175, 49.20483],
+          [-122.889393, 49.224662],
+          [-122.8828, 49.233244],
+          [-122.896805, 49.248512],
+          [-122.918223, 49.253416]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "line": "Millennium",
+        "branch": "Lafarge Lake-Douglas",
+        "station_names": [
+          "VCC-Clark",
+          "Commercial-Broadway",
+          "Renfrew",
+          "Rupert",
+          "Gilmore",
+          "Brentwood Town Centre",
+          "Holdom",
+          "Sperling-Burnaby Lake",
+          "Lake City Way",
+          "Production Way-University",
+          "Lougheed Town Centre",
+          "Burquitlam",
+          "Moody Centre",
+          "Inlet Centre",
+          "Coquitlam Central",
+          "Lincoln",
+          "Lafarge Lake-Douglas"
+        ],
+        "geometry_type": "station-to-station",
+        "source": "Derived from data/vancouver-stations.geojson"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [-123.079069, 49.265845],
+          [-123.068765, 49.26267],
+          [-123.045379, 49.258913],
+          [-123.032867, 49.260784],
+          [-123.013554, 49.264974],
+          [-123.001829, 49.266396],
+          [-122.982169, 49.264734],
+          [-122.963998, 49.259195],
+          [-122.939192, 49.254635],
+          [-122.918223, 49.253416],
+          [-122.896805, 49.248512],
+          [-122.889834, 49.261403],
+          [-122.846034, 49.278012],
+          [-122.828187, 49.27721],
+          [-122.800421, 49.27434],
+          [-122.793917, 49.280423],
+          [-122.791541, 49.285718]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "line": "Canada",
+        "branch": "Richmond-Brighouse",
+        "station_names": [
+          "Waterfront",
+          "Vancouver City Centre",
+          "Yaletown-Roundhouse",
+          "Olympic Village",
+          "Broadway-City Hall",
+          "King Edward",
+          "Oakridge-41st Avenue",
+          "Langara-49th Avenue",
+          "Marine Drive",
+          "Bridgeport",
+          "Capstan",
+          "Aberdeen",
+          "Lansdowne",
+          "Richmond-Brighouse"
+        ],
+        "geometry_type": "station-to-station",
+        "source": "Derived from data/vancouver-stations.geojson"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [-123.111773, 49.285687],
+          [-123.118227, 49.282415],
+          [-123.122079, 49.274492],
+          [-123.115348, 49.266596],
+          [-123.114822, 49.262717],
+          [-123.11545, 49.249175],
+          [-123.116295, 49.233739],
+          [-123.116523, 49.22573],
+          [-123.117015, 49.209666],
+          [-123.126062, 49.195538],
+          [-123.131862, 49.189147],
+          [-123.136325, 49.184],
+          [-123.136475, 49.174665],
+          [-123.136372, 49.167943]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "line": "Canada",
+        "branch": "YVR-Airport",
+        "station_names": [
+          "Bridgeport",
+          "Templeton",
+          "Sea Island Centre",
+          "YVR-Airport"
+        ],
+        "geometry_type": "station-to-station",
+        "source": "Derived from data/vancouver-stations.geojson"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [-123.126062, 49.195538],
+          [-123.146337, 49.196688],
+          [-123.157887, 49.192986],
+          [-123.178269, 49.194174]
+        ]
+      }
+    }
+  ]
+}
