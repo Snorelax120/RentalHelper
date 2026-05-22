@@ -234,6 +234,7 @@
     }
 
     if (pending) {
+      T.walkingTime?.clear(reason);
       applyFrozenZoomRects(frozenRects);
     } else {
       T.overlay.scheduleAlign();

@@ -196,8 +196,10 @@
     if (!rect) {
       T.panSmoothing?.clear("map rect unavailable");
       T.stationHover?.clear();
+      T.walkingTime?.clear("map rect unavailable");
       state.overlay.hidden = true;
       state.toggle.hidden = true;
+      T.transitTime?.positionPanel(null);
       if (state.debugPanel) state.debugPanel.hidden = true;
       return;
     }
@@ -213,6 +215,7 @@
       top: `${Math.max(8, rect.top + 12)}px`,
       left: `${Math.max(8, rect.right - 88)}px`
     });
+    T.transitTime?.positionPanel(rect);
     T.debug.positionDebugPanel(rect);
 
     const overlaySignature = [
@@ -224,6 +227,7 @@
 
     if (overlaySignature !== state.lastOverlaySignature) {
       state.lastOverlaySignature = overlaySignature;
+      T.walkingTime?.clear("overlay aligned");
       T.utils.debugLog("Overlay aligned", {
         rect: T.utils.formatRect(rect),
         element: state.mapElement
@@ -243,6 +247,8 @@
     if (hidden) {
       T.panSmoothing?.clear("overlay hidden");
       T.stationHover?.clear();
+      T.walkingTime?.clear("overlay hidden");
+      T.transitTime?.positionPanel(null);
     }
     state.overlay.hidden = hidden;
   }

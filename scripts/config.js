@@ -8,6 +8,9 @@
     STORAGE_KEY: "vancouverTransitOverlayEnabled",
     CALIBRATION_STORAGE_KEY: "vancouverTransitOverlayCalibration",
     LINE_VISIBILITY_STORAGE_KEY: "vancouverTransitVisibleLines",
+    COMMUTE_DESTINATION_STORAGE_KEY: "vancouverTransitCommuteDestination",
+    COMMUTE_MODES_STORAGE_KEY: "vancouverTransitCommuteModes",
+    COMMUTE_PANEL_OPEN_STORAGE_KEY: "vancouverTransitCommutePanelOpen",
     DEFAULT_CENTER: [49.2827, -123.1207],
     DEFAULT_ZOOM: 13,
     CALIBRATION_VERSION: 5,
@@ -27,6 +30,42 @@
     ZOOM_INTENT_CLEAR_MS: 700,
     STATION_HOVER_RADIUS_PX: 12,
     STATION_TOOLTIP_OFFSET_PX: 12,
+    WALKING_SPEED_KMPH: 4.8,
+    WALKING_SPEED_METERS_PER_MINUTE: 80,
+    WALKING_CIRCUITY_FACTOR: 1.25,
+    WALKING_MIN_MINUTES: 1,
+    WALKING_RESULT_COUNT: 2,
+    WALKING_MARKER_SCAN_MS: 500,
+    WALKING_HOVER_RADIUS_PX: 14,
+    WALKING_TOOLTIP_OFFSET_PX: 14,
+    WALKING_MARKER_MAX_RESULTS: 80,
+    WALKING_SNAP_MAX_METERS: 90,
+    WALKING_EDGE_INDEX_CELL_DEGREES: 0.005,
+    WALKING_CITY_PACKS: [
+      {
+        id: "vancouver",
+        name: "Metro Vancouver",
+        resource: "data/vancouver-walking-pack.json"
+      }
+    ],
+    TRANSIT_CITY_PACKS: [
+      {
+        id: "vancouver",
+        name: "Metro Vancouver",
+        resource: "data/city-packs/vancouver/manifest.json"
+      }
+    ],
+    COMMUTE_RESULT_STOP_LIMIT: 8,
+    COMMUTE_ADDRESS_RESULT_LIMIT: 6,
+    COMMUTE_BUS_AVERAGE_SPEED_KMPH: 18,
+    COMMUTE_METRO_AVERAGE_SPEED_KMPH: 35,
+    COMMUTE_TRANSIT_CIRCUITY_FACTOR: 1.35,
+    COMMUTE_BUS_TIME_MULTIPLIER: 1.7,
+    COMMUTE_METRO_TIME_MULTIPLIER: 1,
+    COMMUTE_TRANSFER_PENALTY_MINUTES: 3,
+    COMMUTE_ROUTE_CHANGE_PENALTY_MINUTES: 3,
+    COMMUTE_MAX_ROUTE_SEGMENTS: 2,
+    TRANSIT_MAX_RESULT_MINUTES: 120,
     MIN_MAP_WIDTH: 320,
     MIN_MAP_HEIGHT: 280,
     lineColors: {
@@ -98,6 +137,36 @@
       reason: "",
       overlayRect: null,
       toggleRect: null
+    },
+    walkingTime: {
+      stationIndex: null,
+      stationIndexSource: null,
+      cityPacks: [],
+      cityPacksLoading: false,
+      cityPacksLoaded: false,
+      cityPackLoadError: "",
+      candidateCache: null,
+      candidateCacheAt: 0,
+      lastClearReason: ""
+    },
+    transitTime: {
+      panelOpen: false,
+      destination: null,
+      modes: {
+        metro: true,
+        bus: false
+      },
+      packs: [],
+      packsLoading: false,
+      packsLoaded: false,
+      packLoadError: "",
+      panelButton: null,
+      panel: null,
+      input: null,
+      suggestions: null,
+      status: null,
+      lastQuery: "",
+      lastSuggestions: []
     },
     lastCandidateSignature: "",
     lastTopCandidatesSignature: "",

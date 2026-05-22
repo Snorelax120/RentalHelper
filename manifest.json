@@ -20,6 +20,8 @@
         "scripts/overlay.js",
         "scripts/pan-smoothing.js",
         "scripts/station-hover.js",
+        "scripts/transit-time.js",
+        "scripts/walking-time.js",
         "scripts/diagnostics.js",
         "scripts/debug-bridge.js",
         "content.js"
@@ -32,6 +34,12 @@
       "resources": [
         "data/vancouver-stations.geojson",
         "data/vancouver-lines.geojson",
+        "data/vancouver-walking-pack.json",
+        "data/city-packs/index.json",
+        "data/city-packs/vancouver/manifest.json",
+        "data/city-packs/vancouver/addresses.json",
+        "data/city-packs/vancouver/transit.json",
+        "data/city-packs/vancouver/grid.json",
         "scripts/page-debug-bridge.js"
       ],
       "matches": [

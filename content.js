@@ -10,7 +10,13 @@
       snapshotMapState: T.diagnostics.snapshotMapState,
       startDiagnostics: T.diagnostics.start,
       stopDiagnostics: T.diagnostics.stop,
-      getDiagnosticsSummary: T.diagnostics.getSummary
+      getDiagnosticsSummary: T.diagnostics.getSummary,
+      getListingMarkerCandidates: T.walkingTime.getListingMarkerCandidates,
+      getNearestStations: T.walkingTime.getNearestStations,
+      getWalkingCityPacks: T.walkingTime.getCityPacks,
+      searchCommuteDestinations: T.transitTime.searchDestinations,
+      getNearestTransitStops: T.transitTime.getNearestStops,
+      getCommuteDebugState: T.transitTime.getDebugState
     };
   }
 
@@ -28,6 +34,8 @@
     T.debug.createDebugPanel();
     T.panSmoothing.start();
     T.stationHover.start();
+    T.transitTime.start();
+    T.walkingTime.start();
     T.map.start();
     T.sync.startUrlPolling();
 

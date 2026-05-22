@@ -87,6 +87,145 @@
   display: none;
 }
 
+#transit-commute-toggle {
+  position: fixed;
+  z-index: 501;
+  min-width: 86px;
+  height: 34px;
+  border: 1px solid rgba(10, 21, 32, 0.2);
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.94);
+  color: #102033;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+  font: 600 13px/1 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+#transit-commute-toggle:hover,
+#transit-commute-toggle[data-open="true"] {
+  background: #ffffff;
+}
+
+#transit-commute-toggle[hidden] {
+  display: none;
+}
+
+#transit-commute-panel {
+  position: fixed;
+  z-index: 502;
+  width: 280px;
+  padding: 10px;
+  border: 1px solid rgba(10, 21, 32, 0.22);
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.97);
+  color: #102033;
+  box-shadow: 0 3px 14px rgba(0, 0, 0, 0.22);
+  font: 600 12px/1.25 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  pointer-events: auto;
+}
+
+#transit-commute-panel[hidden] {
+  display: none;
+}
+
+.transit-commute-title {
+  margin-bottom: 8px;
+  color: #005596;
+  font-size: 13px;
+}
+
+.transit-commute-label {
+  display: block;
+  margin-bottom: 4px;
+  color: #2d3b4d;
+  font-size: 11px;
+}
+
+#transit-commute-destination {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 30px;
+  border: 1px solid rgba(10, 21, 32, 0.24);
+  border-radius: 5px;
+  padding: 6px 7px;
+  color: #102033;
+  font: inherit;
+  font-weight: 500;
+}
+
+#transit-commute-suggestions {
+  max-height: 172px;
+  overflow: auto;
+  margin-top: 5px;
+  border: 1px solid rgba(10, 21, 32, 0.16);
+  border-radius: 5px;
+}
+
+#transit-commute-suggestions[hidden] {
+  display: none;
+}
+
+#transit-commute-suggestions button {
+  display: block;
+  width: 100%;
+  min-height: 34px;
+  border: 0;
+  border-bottom: 1px solid rgba(10, 21, 32, 0.08);
+  background: #ffffff;
+  color: #102033;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+
+#transit-commute-suggestions button:hover {
+  background: #eef7ff;
+}
+
+#transit-commute-suggestions small {
+  display: block;
+  margin-top: 2px;
+  color: #667487;
+  font-size: 10px;
+  font-weight: 500;
+}
+
+.transit-commute-modes {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.transit-commute-modes label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #2d3b4d;
+  font-size: 11px;
+}
+
+.transit-commute-actions {
+  margin-top: 8px;
+}
+
+.transit-commute-actions button {
+  min-height: 26px;
+  border: 1px solid rgba(10, 21, 32, 0.2);
+  border-radius: 5px;
+  background: #f8fbff;
+  color: #102033;
+  font: inherit;
+  cursor: pointer;
+}
+
+#transit-commute-status {
+  margin-top: 7px;
+  color: #667487;
+  font-size: 11px;
+  font-weight: 500;
+}
+
 #transit-debug-panel {
   position: fixed;
   z-index: 502;
@@ -177,5 +316,122 @@
   margin-top: 2px;
   color: #4b5a6a;
   font-size: 11px;
+  font-weight: 500;
+}
+
+#transit-walking-time {
+  position: fixed;
+  z-index: 504;
+  min-width: 164px;
+  max-width: 230px;
+  padding: 7px 8px;
+  border: 1px solid rgba(10, 21, 32, 0.22);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.97);
+  color: #102033;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.22);
+  font: 600 12px/1.25 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  pointer-events: none;
+}
+
+#transit-walking-time[hidden] {
+  display: none;
+}
+
+.transit-walking-time-row + .transit-walking-time-row {
+  margin-top: 7px;
+  padding-top: 7px;
+  border-top: 1px solid rgba(10, 21, 32, 0.12);
+}
+
+.transit-walking-time-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.transit-walking-time-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.transit-walking-time-minutes {
+  color: #2d3b4d;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.transit-walking-time-lines {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.transit-walking-time-line {
+  display: inline-flex;
+  align-items: center;
+  min-height: 15px;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: #edf2f7;
+  color: #102033;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.transit-walking-time-line[data-line="Expo"] {
+  background: #005596;
+  color: #ffffff;
+}
+
+.transit-walking-time-line[data-line="Millennium"] {
+  background: #ffcd00;
+  color: #102033;
+}
+
+.transit-walking-time-line[data-line="Canada"] {
+  background: #00a7e1;
+  color: #ffffff;
+}
+
+.transit-commute-estimate {
+  background: rgba(238, 247, 255, 0.72);
+}
+
+.transit-commute-route {
+  margin-top: 4px;
+  color: #4b5a6a;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.transit-commute-breakdown {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 5px;
+}
+
+.transit-commute-breakdown span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 15px;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: #ffffff;
+  color: #2d3b4d;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.transit-commute-endpoint {
+  margin-top: 4px;
+  color: #667487;
+  font-size: 10px;
   font-weight: 500;
 }

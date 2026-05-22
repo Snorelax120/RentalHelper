@@ -58,6 +58,12 @@
     startDiagnostics: () => request("startDiagnostics"),
     stopDiagnostics: () => request("stopDiagnostics"),
     getDiagnosticsSummary: () => request("getDiagnosticsSummary"),
-    snapshotMapState: () => request("snapshotMapState")
+    snapshotMapState: () => request("snapshotMapState"),
+    getListingMarkerCandidates: (options) => request("getListingMarkerCandidates", [options]),
+    getNearestStations: (latLng, count) => request("getNearestStations", [latLng, count]),
+    getWalkingCityPacks: () => request("getWalkingCityPacks"),
+    searchCommuteDestinations: (query) => request("searchCommuteDestinations", [query]),
+    getNearestTransitStops: (latLng, modes, limit) => request("getNearestTransitStops", [latLng, modes, limit]),
+    getCommuteDebugState: () => request("getCommuteDebugState")
   };
 })();

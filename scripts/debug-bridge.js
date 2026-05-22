@@ -5,13 +5,12 @@
   const RESPONSE_EVENT = "transit-overlay-debug-response";
   const PAGE_BRIDGE_PATH = "scripts/page-debug-bridge.js";
 
-  if (!config.DEBUG) return;
-
   const methods = {
     ping: () => ({
       ok: true,
       debug: config.DEBUG,
       hasDiagnostics: Boolean(T.diagnostics),
+      hasWalkingTime: Boolean(T.walkingTime),
       hasMapElement: Boolean(state.mapElement),
       href: window.location.href,
       selectedMap: state.mapElement ? utils.describeElement(state.mapElement) : null,
@@ -20,6 +19,8 @@
       lastHostTileZoom: state.lastHostTileZoom,
       panSmoothing: state.panSmoothing,
       zoomSync: state.zoomSync,
+      walkingCityPacks: T.walkingTime.getCityPacks(),
+      commute: T.transitTime.getDebugState(),
       visibleLines: state.visibleLines,
       currentHostTileZoom: T.sync.getHostTileZoom(),
       calibration: state.calibration
@@ -27,7 +28,13 @@
     startDiagnostics: () => T.diagnostics.start(),
     stopDiagnostics: () => T.diagnostics.stop(),
     getDiagnosticsSummary: () => T.diagnostics.getSummary(),
-    snapshotMapState: () => T.diagnostics.snapshotMapState()
+    snapshotMapState: () => T.diagnostics.snapshotMapState(),
+    getListingMarkerCandidates: (options) => T.walkingTime.getListingMarkerCandidates(options),
+    getNearestStations: (latLng, count) => T.walkingTime.getNearestStations(latLng, count),
+    getWalkingCityPacks: () => T.walkingTime.getCityPacks(),
+    searchCommuteDestinations: (query) => T.transitTime.searchDestinations(query),
+    getNearestTransitStops: (latLng, modes, limit) => T.transitTime.getNearestStops(latLng, modes, limit),
+    getCommuteDebugState: () => T.transitTime.getDebugState()
   };
 
   function installRequestListener() {

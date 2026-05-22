@@ -7,19 +7,33 @@ const root = path.resolve(__dirname, "..");
 const allowedLines = new Set(["Expo", "Millennium", "Canada"]);
 const requiredWebResources = new Set([
   "data/vancouver-stations.geojson",
-  "data/vancouver-lines.geojson"
+  "data/vancouver-lines.geojson",
+  "data/vancouver-walking-pack.json",
+  "data/city-packs/index.json",
+  "data/city-packs/vancouver/manifest.json",
+  "data/city-packs/vancouver/addresses.json",
+  "data/city-packs/vancouver/transit.json",
+  "data/city-packs/vancouver/grid.json"
 ]);
 
 function main() {
   const manifest = readJson("manifest.json");
   const stations = readJson("data/vancouver-stations.geojson");
   const lines = readJson("data/vancouver-lines.geojson");
+  const walkingPack = readJson("data/vancouver-walking-pack.json");
+  const cityIndex = readJson("data/city-packs/index.json");
+  const cityManifest = readJson("data/city-packs/vancouver/manifest.json");
+  const addressPack = readJson("data/city-packs/vancouver/addresses.json");
+  const transitPack = readJson("data/city-packs/vancouver/transit.json");
+  const cityGrid = readJson("data/city-packs/vancouver/grid.json");
 
   validateManifest(manifest);
   const stationMap = validateStations(stations);
   validateLines(lines, stationMap);
+  validateWalkingPack(walkingPack);
+  validateCityPack({ cityIndex, cityManifest, addressPack, transitPack, cityGrid });
 
-  console.log("Validation passed: manifest, station data, and route line data are valid.");
+  console.log("Validation passed: manifest, station data, route line data, walking pack, and city pack are valid.");
 }
 
 function readJson(relativePath) {
@@ -117,6 +131,153 @@ function validateLines(geojson, stationMap) {
   ]) {
     assert(branches.has(required), `Missing required route branch ${required}.`);
   }
+}
+
+function validateWalkingPack(pack) {
+  assert(pack.schema === "transit-walking-city-pack", "Walking pack must use transit-walking-city-pack schema.");
+  assert(pack.version === 1, "Walking pack version must be 1.");
+  assert(typeof pack.id === "string" && pack.id.trim(), "Walking pack must have an id.");
+  assert(typeof pack.name === "string" && pack.name.trim(), "Walking pack must have a name.");
+
+  const bounds = pack.bounds;
+  assert(bounds && typeof bounds === "object", "Walking pack must define bounds.");
+  assertValidCoordinates([bounds.west, bounds.south], "Walking pack southwest bounds");
+  assertValidCoordinates([bounds.east, bounds.north], "Walking pack northeast bounds");
+  assert(bounds.west < bounds.east, "Walking pack west bound must be less than east bound.");
+  assert(bounds.south < bounds.north, "Walking pack south bound must be less than north bound.");
+
+  const routing = pack.routing;
+  assert(routing && typeof routing === "object", "Walking pack must define routing metadata.");
+  assert(
+    ["direct-estimate", "precomputed-node-station-distances-v1"].includes(routing.mode),
+    `Walking pack routing mode is unsupported: ${routing.mode}.`
+  );
+  assert(Array.isArray(routing.nodes), "Walking pack routing.nodes must be an array.");
+  assert(Array.isArray(routing.edges), "Walking pack routing.edges must be an array.");
+
+  if (routing.mode === "precomputed-node-station-distances-v1") {
+    assert(Array.isArray(routing.stations), "Graph walking pack must include routing.stations.");
+    assert(routing.nodes.length > 0, "Graph walking pack must include nodes.");
+    assert(routing.edges.length > 0, "Graph walking pack must include edges.");
+  }
+}
+
+function validateCityPack({ cityIndex, cityManifest, addressPack, transitPack, cityGrid }) {
+  assert(cityIndex.version === 1, "City pack index version must be 1.");
+  assert(Array.isArray(cityIndex.packs) && cityIndex.packs.length > 0, "City pack index must contain packs.");
+  assert(cityIndex.packs.some((pack) => pack.id === "vancouver"), "City pack index must include Vancouver.");
+
+  assert(cityManifest.schema === "transit-city-pack", "City manifest must use transit-city-pack schema.");
+  assert(cityManifest.id === "vancouver", "City manifest id must be vancouver.");
+  validateBounds(cityManifest.bounds, "City manifest bounds");
+  assert(cityManifest.resources?.addresses?.resource === "addresses.json", "City manifest must reference addresses.json.");
+  assert(cityManifest.resources?.transit?.resource === "transit.json", "City manifest must reference transit.json.");
+  assert(cityManifest.grid?.resource === "grid.json", "City manifest must reference grid.json.");
+
+  assert(addressPack.schema === "transit-address-pack", "Address pack schema is invalid.");
+  assert(Array.isArray(addressPack.entries), "Address pack entries must be an array.");
+  assert(addressPack.entries.length >= 50000, "Address pack should include Vancouver property addresses.");
+
+  const addressCells = new Set();
+  for (const [index, entry] of addressPack.entries.entries()) {
+    assert(Array.isArray(entry) && entry.length >= 6, `Address entry ${index} must use compact array format.`);
+    const [label, search, lat, lng, cellId, kind] = entry;
+    assert(typeof label === "string" && label.trim(), `Address entry ${index} must have a label.`);
+    assert(typeof search === "string" && search.trim(), `Address entry ${index} must have search text.`);
+    assertValidLatLngObject({ lat, lng }, `Address entry ${index}`);
+    assert(typeof cellId === "string" && cellId.trim(), `Address entry ${index} must have a cell id.`);
+    assert(["address", "station"].includes(kind), `Address entry ${index} has unsupported kind ${kind}.`);
+    addressCells.add(cellId);
+  }
+
+  assert(transitPack.schema === "transit-stop-pack", "Transit stop pack schema is invalid.");
+  assert(Array.isArray(transitPack.stops), "Transit stop pack stops must be an array.");
+  assert(Array.isArray(transitPack.routes), "Transit stop pack routes must be an array.");
+  assert(Array.isArray(transitPack.routeEdges), "Transit stop pack routeEdges must be an array.");
+  assert(Array.isArray(transitPack.transferEdges), "Transit stop pack transferEdges must be an array.");
+  assert(transitPack.stops.length >= 8000, "Transit stop pack should include TransLink bus stops.");
+  assert(transitPack.routes.length >= 200, "Transit stop pack should include GTFS routes.");
+  assert(transitPack.routeEdges.length >= 10000, "Transit stop pack should include GTFS route edges.");
+
+  const stopCells = new Set();
+  let busCount = 0;
+  let metroCount = 0;
+  for (const [index, stop] of transitPack.stops.entries()) {
+    assert(Array.isArray(stop) && stop.length >= 7, `Transit stop ${index} must use compact array format.`);
+    const [id, code, name, mode, lat, lng, cellId] = stop;
+    assert(typeof id === "string" && id.trim(), `Transit stop ${index} must have an id.`);
+    assert(typeof code === "string", `Transit stop ${index} must have a code string.`);
+    assert(typeof name === "string" && name.trim(), `Transit stop ${index} must have a name.`);
+    assert(["bus", "metro"].includes(mode), `Transit stop ${index} has unsupported mode ${mode}.`);
+    assertValidLatLngObject({ lat, lng }, `Transit stop ${index}`);
+    assert(typeof cellId === "string" && cellId.trim(), `Transit stop ${index} must have a cell id.`);
+    if (mode === "bus") busCount += 1;
+    if (mode === "metro") metroCount += 1;
+    stopCells.add(cellId);
+  }
+  assert(busCount >= 8000, "Transit stop pack should include at least 8,000 bus stops.");
+  assert(metroCount >= 50, "Transit stop pack should include SkyTrain station stops.");
+
+  for (const [index, route] of transitPack.routes.entries()) {
+    assert(Array.isArray(route) && route.length >= 4, `Transit route ${index} must use compact array format.`);
+    assert(typeof route[0] === "string" && route[0].trim(), `Transit route ${index} must have an id.`);
+    assert(typeof route[1] === "string" && route[1].trim(), `Transit route ${index} must have a label.`);
+    assert(["bus", "metro"].includes(route[3]), `Transit route ${index} has unsupported mode ${route[3]}.`);
+  }
+
+  for (const [index, edge] of transitPack.routeEdges.entries()) {
+    assert(Array.isArray(edge) && edge.length >= 4, `Route edge ${index} must use compact array format.`);
+    assert(Number.isInteger(edge[0]) && edge[0] >= 0 && edge[0] < transitPack.stops.length, `Route edge ${index} has invalid from stop.`);
+    assert(Number.isInteger(edge[1]) && edge[1] >= 0 && edge[1] < transitPack.stops.length, `Route edge ${index} has invalid to stop.`);
+    assert(Number.isFinite(edge[2]) && edge[2] > 0, `Route edge ${index} must have positive minutes.`);
+    assert(Number.isInteger(edge[3]) && edge[3] >= 0 && edge[3] < transitPack.routes.length, `Route edge ${index} has invalid route index.`);
+  }
+
+  for (const [index, edge] of transitPack.transferEdges.entries()) {
+    assert(Array.isArray(edge) && edge.length >= 3, `Transfer edge ${index} must use compact array format.`);
+    assert(Number.isInteger(edge[0]) && edge[0] >= 0 && edge[0] < transitPack.stops.length, `Transfer edge ${index} has invalid from stop.`);
+    assert(Number.isInteger(edge[1]) && edge[1] >= 0 && edge[1] < transitPack.stops.length, `Transfer edge ${index} has invalid to stop.`);
+    assert(Number.isFinite(edge[2]) && edge[2] > 0, `Transfer edge ${index} must have positive minutes.`);
+  }
+
+  assert(cityGrid.schema === "transit-city-grid", "City grid schema is invalid.");
+  assert(Array.isArray(cityGrid.cells), "City grid cells must be an array.");
+  const gridCells = new Set();
+  for (const [index, cell] of cityGrid.cells.entries()) {
+    assert(Array.isArray(cell) && cell.length >= 3, `Grid cell ${index} must use compact array format.`);
+    const [id, addressIds, transitStopIds] = cell;
+    assert(typeof id === "string" && id.trim(), `Grid cell ${index} must have an id.`);
+    assert(!gridCells.has(id), `Duplicate grid cell id ${id}.`);
+    assert(Array.isArray(addressIds), `Grid cell ${id} addressIds must be an array.`);
+    assert(Array.isArray(transitStopIds), `Grid cell ${id} transitStopIds must be an array.`);
+    for (const addressIndex of addressIds) {
+      assert(Number.isInteger(addressIndex) && addressIndex >= 0 && addressIndex < addressPack.entries.length, `Grid cell ${id} references invalid address index ${addressIndex}.`);
+    }
+    for (const stopIndex of transitStopIds) {
+      assert(Number.isInteger(stopIndex) && stopIndex >= 0 && stopIndex < transitPack.stops.length, `Grid cell ${id} references invalid stop index ${stopIndex}.`);
+    }
+    gridCells.add(id);
+  }
+
+  for (const cellId of addressCells) {
+    assert(gridCells.has(cellId), `Address pack references missing grid cell ${cellId}.`);
+  }
+  for (const cellId of stopCells) {
+    assert(gridCells.has(cellId), `Transit stop pack references missing grid cell ${cellId}.`);
+  }
+}
+
+function validateBounds(bounds, label) {
+  assert(bounds && typeof bounds === "object", `${label} must be an object.`);
+  assertValidCoordinates([bounds.west, bounds.south], `${label} southwest`);
+  assertValidCoordinates([bounds.east, bounds.north], `${label} northeast`);
+  assert(bounds.west < bounds.east, `${label} west must be less than east.`);
+  assert(bounds.south < bounds.north, `${label} south must be less than north.`);
+}
+
+function assertValidLatLngObject(value, label) {
+  assert(Number.isFinite(Number(value.lng)) && Number(value.lng) >= -180 && Number(value.lng) <= 180, `${label} longitude is invalid.`);
+  assert(Number.isFinite(Number(value.lat)) && Number(value.lat) >= -90 && Number(value.lat) <= 90, `${label} latitude is invalid.`);
 }
 
 function normalizeLines(value) {

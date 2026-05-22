@@ -79,6 +79,7 @@
     if (!smoothing.active) {
       smoothing.active = true;
       updatePublicState(true, "pending", 0, 0, "drag started");
+      T.walkingTime?.clear("pan smoothing active");
     }
 
     scheduleFrame();
@@ -207,6 +208,7 @@
     }
 
     updatePublicState(false, "none", 0, 0, reason);
+    T.walkingTime?.clear(reason);
     if (updateDebug) T.debug.updateDebugPanel();
   }
 
