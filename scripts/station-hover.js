@@ -83,12 +83,13 @@
   function showTooltip(feature, clientX, clientY) {
     const stationName = feature.properties?.station_name || "Station";
     const lines = normalizeLines(feature.properties?.line);
-    const lineText = lines.join(", ");
 
     if (hover.activeStationName !== stationName) {
       hover.tooltip.innerHTML = `
         <div class="transit-station-hover-name">${escapeHtml(stationName)}</div>
-        <div class="transit-station-hover-lines">${escapeHtml(lineText)}</div>
+        <div class="transit-station-hover-lines">
+          ${lines.map((line) => `<span data-line="${escapeHtml(line)}">${escapeHtml(line)}</span>`).join("")}
+        </div>
       `;
       hover.activeStationName = stationName;
     }

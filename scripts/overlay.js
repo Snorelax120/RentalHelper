@@ -26,9 +26,10 @@
     const toggle = document.createElement("button");
     toggle.id = config.TOGGLE_ID;
     toggle.type = "button";
-    toggle.textContent = "Transit";
+    toggle.innerHTML = `<span aria-hidden="true"></span><strong>Transit</strong>`;
     toggle.hidden = true;
     toggle.setAttribute("aria-pressed", String(state.overlayEnabled));
+    toggle.setAttribute("aria-label", "Toggle transit overlay");
     toggle.dataset.enabled = String(state.overlayEnabled);
     toggle.addEventListener("click", () => {
       state.overlayEnabled = !state.overlayEnabled;

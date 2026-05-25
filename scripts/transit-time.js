@@ -23,8 +23,10 @@
     const button = document.createElement("button");
     button.id = "transit-commute-toggle";
     button.type = "button";
-    button.textContent = "Commute";
+    button.innerHTML = `<span aria-hidden="true"></span><strong>Commute</strong>`;
     button.hidden = true;
+    button.setAttribute("aria-controls", "transit-commute-panel");
+    button.setAttribute("aria-expanded", "false");
     button.addEventListener("click", () => {
       setPanelOpen(!state.transitTime.panelOpen);
     });
@@ -32,19 +34,29 @@
     const panel = document.createElement("section");
     panel.id = "transit-commute-panel";
     panel.hidden = true;
+    panel.setAttribute("aria-label", "Commute estimate settings");
     panel.innerHTML = `
-      <div class="transit-commute-title">Commute</div>
+      <div class="transit-commute-header">
+        <div>
+          <div class="transit-commute-title">Commute</div>
+          <div class="transit-commute-subtitle">Offline estimate from listings</div>
+        </div>
+        <button type="button" class="transit-commute-close" data-commute-action="close">Close</button>
+      </div>
       <label class="transit-commute-label" for="transit-commute-destination">Destination</label>
-      <input id="transit-commute-destination" type="text" autocomplete="off" placeholder="Address or lat,lng">
-      <div id="transit-commute-suggestions" hidden></div>
+      <div class="transit-commute-input-row">
+        <input id="transit-commute-destination" type="text" autocomplete="off" placeholder="725 Granville St">
+      </div>
+      <div id="transit-commute-suggestions" role="listbox" hidden></div>
+      <div class="transit-commute-mode-title">Transit modes</div>
       <div class="transit-commute-modes" aria-label="Transit modes">
-        <label><input type="checkbox" data-commute-mode="metro"> SkyTrain</label>
-        <label><input type="checkbox" data-commute-mode="bus"> Bus</label>
+        <label><input type="checkbox" data-commute-mode="metro"><span>SkyTrain</span></label>
+        <label><input type="checkbox" data-commute-mode="bus"><span>Bus</span></label>
       </div>
       <div class="transit-commute-actions">
-        <button type="button" data-commute-action="clear">Clear</button>
+        <button type="button" data-commute-action="clear">Clear destination</button>
       </div>
-      <div id="transit-commute-status"></div>
+      <div id="transit-commute-status" aria-live="polite"></div>
     `;
 
     document.body.appendChild(button);
@@ -220,6 +232,11 @@
 
   function handlePanelClick(event) {
     const action = event.target?.getAttribute?.("data-commute-action");
+    if (action === "close") {
+      setPanelOpen(false);
+      return;
+    }
+
     if (action === "clear") {
       setDestination(null);
       state.transitTime.input.value = "";
@@ -261,7 +278,7 @@
     suggestionsNode.innerHTML = suggestions
       .map(
         (suggestion, index) => `
-          <button type="button" data-commute-suggestion="${index}">
+          <button type="button" role="option" data-commute-suggestion="${index}">
             <span>${escapeHtml(suggestion.label)}</span>
             <small>${escapeHtml(getSuggestionMeta(suggestion))}</small>
           </button>
@@ -679,37 +696,99 @@
 
   function renderTooltipEstimate(estimate) {
     if (!estimate) return "";
-    const routeText = renderRouteSummary(estimate);
     const transitModeText = getTransitBreakdownLabel(estimate);
 
     return `
       <div class="transit-walking-time-row transit-commute-estimate">
         <div class="transit-walking-time-main">
           <span class="transit-walking-time-name">To ${escapeHtml(shortDestinationLabel(estimate.destinationLabel))}</span>
-          <span class="transit-walking-time-minutes">rough ${estimate.totalMinutes} min</span>
+          <span class="transit-walking-time-minutes">about ${estimate.totalMinutes} min</span>
         </div>
-        <div class="transit-commute-route">
-          ${escapeHtml(routeText)}
-        </div>
+        ${renderRouteSteps(estimate)}
         <div class="transit-commute-breakdown">
           <span>${estimate.accessWalkMinutes}m walk</span>
           <span>${estimate.transitMinutes}m ${escapeHtml(transitModeText)}</span>
           ${estimate.transferWalkMinutes ? `<span>${estimate.transferWalkMinutes}m transfer</span>` : ""}
           <span>${estimate.egressWalkMinutes}m walk</span>
         </div>
-        <div class="transit-commute-endpoint">
-          get off near ${escapeHtml(cleanStopName(estimate.destinationStop.name))}
-        </div>
       </div>
     `;
   }
 
-  function renderRouteSummary(estimate) {
-    if (estimate.routeSegments?.length) {
-      return estimate.routeSegments.map((segment) => formatSegmentLabel(segment)).join(" then ");
+  function renderRouteSteps(estimate) {
+    const steps = [];
+
+    if (estimate.accessWalkMinutes && estimate.originStop?.name) {
+      steps.push({
+        kind: "walk",
+        badge: `${estimate.accessWalkMinutes}m`,
+        title: "Walk to stop",
+        detail: `to ${cleanStopName(estimate.originStop.name)}`
+      });
     }
 
-    return `${estimate.label} near ${cleanStopName(estimate.originStop.name)}`;
+    if (estimate.routeSegments?.length) {
+      estimate.routeSegments.forEach((segment, index) => {
+        steps.push({
+          kind: segment.mode,
+          badge: formatStepMinutes(segment.minutes),
+          title: `${index === 0 ? "Take" : "Transfer to"} ${formatSegmentLabel(segment)}`,
+          detail: getSegmentDetail(segment, index)
+        });
+      });
+    } else if (estimate.originStop?.name) {
+      steps.push({
+        kind: estimate.mode,
+        badge: formatStepMinutes(estimate.transitMinutes),
+        title: estimate.label,
+        detail: `near ${cleanStopName(estimate.originStop.name)}`
+      });
+    }
+
+    if (estimate.egressWalkMinutes && estimate.destinationStop?.name) {
+      steps.push({
+        kind: "walk",
+        badge: `${estimate.egressWalkMinutes}m`,
+        title: "Walk to destination",
+        detail: `from ${cleanStopName(estimate.destinationStop.name)}`
+      });
+    }
+
+    return `
+      <div class="transit-commute-steps">
+        ${steps.map(renderRouteStep).join("")}
+      </div>
+    `;
+  }
+
+  function renderRouteStep(step) {
+    return `
+      <div class="transit-commute-step" data-kind="${escapeHtml(step.kind)}">
+        <span class="transit-commute-step-badge">${escapeHtml(step.badge)}</span>
+        <span class="transit-commute-step-text">
+          <strong>${escapeHtml(step.title)}</strong>
+          <small>${escapeHtml(step.detail)}</small>
+        </span>
+      </div>
+    `;
+  }
+
+  function formatStepMinutes(minutes) {
+    const value = Math.max(1, Math.round(Number(minutes) || 1));
+    return `${value}m`;
+  }
+
+  function getSegmentDetail(segment, index) {
+    const fromStop = cleanStopName(segment.fromStop?.name);
+    const toStop = cleanStopName(segment.toStop?.name);
+
+    if (index === 0) {
+      return fromStop ? `board at ${fromStop}` : "";
+    }
+
+    if (fromStop) return `change at ${fromStop}`;
+    if (toStop) return `toward ${toStop}`;
+    return "";
   }
 
   function getTransitBreakdownLabel(estimate) {
@@ -739,8 +818,9 @@
       return;
     }
 
-    const buttonTop = Math.max(8, rect.top + 52);
-    const buttonLeft = Math.max(8, rect.right - 96);
+    const buttonTop = Math.max(8, rect.top + 54);
+    const buttonLeft = Math.max(8, rect.right - 104);
+    const panelWidth = Math.min(320, window.innerWidth - 24);
     Object.assign(state.transitTime.panelButton.style, {
       top: `${buttonTop}px`,
       left: `${buttonLeft}px`
@@ -748,8 +828,8 @@
     state.transitTime.panelButton.hidden = false;
 
     Object.assign(state.transitTime.panel.style, {
-      top: `${Math.max(8, buttonTop + 40)}px`,
-      left: `${Math.max(8, Math.min(rect.right - 288, buttonLeft - 192))}px`
+      top: `${Math.max(8, buttonTop + 44)}px`,
+      left: `${Math.max(8, Math.min(rect.right - panelWidth, buttonLeft - panelWidth + 104))}px`
     });
     state.transitTime.panel.hidden = !state.transitTime.panelOpen;
   }
@@ -782,6 +862,7 @@
 
     if (state.transitTime.panelButton) {
       state.transitTime.panelButton.dataset.open = String(state.transitTime.panelOpen);
+      state.transitTime.panelButton.setAttribute("aria-expanded", String(state.transitTime.panelOpen));
     }
     panel.hidden = !state.transitTime.panelOpen;
     updateStatus(getStatusText());

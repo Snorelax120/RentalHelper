@@ -17,6 +17,7 @@ Current MVP behavior:
 - Shows road-aware walking estimates from visible listing markers to nearby SkyTrain stations.
 - Provides an offline Commute panel with destination lookup, Bus/SkyTrain mode toggles, and rough listing-to-destination transit estimates.
 - Keeps commute route summaries readable by limiting graph routes to at most two transit legs and penalizing route changes.
+- Uses a compact publish-ready UI for map toggles, the commute panel, station hover, walking estimates, and commute steps.
 - Provides a persisted Transit toggle.
 - Keeps debug tools in the codebase but disables them by default with `DEBUG = false`.
 
@@ -43,8 +44,60 @@ Runtime flow:
 - `scripts/pan-smoothing.js` applies visual-only CSS translation during map drag.
 - `scripts/station-hover.js` uses document-level hit testing for non-intercepting station hover details.
 - `scripts/transit-time.js` loads the offline city pack, searches destinations, and estimates simple Bus/SkyTrain routes from listing locations.
+- `scripts/walking-time*.js` scans visible listing markers, projects marker anchors through Leaflet, loads walking city packs, estimates nearby station walking times, and renders the walking-time tooltip.
 - `scripts/storage-debug.js` loads persisted toggle, calibration, and visible-line state.
 - `scripts/diagnostics.js` and `scripts/debug-bridge.js` remain available when `DEBUG = true`.
+
+Walking-time runtime flow:
+
+- `scripts/walking-time-utils.js` owns shared constants, geometry, distance, normalization, DOM-rectangle, and HTML escaping helpers.
+- `scripts/walking-time-city-packs.js` loads configured walking city packs with `chrome.runtime.getURL(...)`, normalizes bounds/stations/nodes/edges, builds the edge index, snaps listing coordinates to the walking graph, and falls back to direct estimates when needed.
+- `scripts/walking-time-candidates.js` scans the Marketplace map for price-like marker elements, filters controls and extension UI, scores candidates, dedupes repeated DOM wrappers, projects marker anchors to lat/lng, and caches diagnostics briefly.
+- `scripts/walking-time-tooltip.js` owns the tooltip element, station-row rendering, commute-estimate merge, render signature, and viewport positioning.
+- `scripts/walking-time.js` is now the small coordinator that starts the feature, listens to pointer movement, clears stale state, and exposes the public `T.walkingTime` API used by debug tools.
+
+Walking-time load order:
+
+1. `scripts/walking-time-utils.js`
+2. `scripts/walking-time-city-packs.js`
+3. `scripts/walking-time-candidates.js`
+4. `scripts/walking-time-tooltip.js`
+5. `scripts/walking-time.js`
+
+Walking-time hover flow:
+
+1. `content.js` calls `T.walkingTime.start()`.
+2. The coordinator creates the tooltip, begins loading city packs, and listens to document-level pointer movement.
+3. Pointer movement is throttled through `requestAnimationFrame`.
+4. The coordinator verifies that the overlay is enabled, map state is valid, zoom and pan smoothing are settled, and the pointer is inside the Marketplace map.
+5. `walking-time-candidates.js` finds the best listing marker near the pointer.
+6. The marker anchor is projected through `state.leafletMap.containerPointToLatLng(...)`.
+7. `walking-time-city-packs.js` finds nearby stations for that projected coordinate.
+8. The station hover tooltip is cleared so the listing tooltip is the only active hover UI.
+9. `walking-time-tooltip.js` renders and positions the walking-time tooltip.
+
+Walking-time city pack estimate flow:
+
+- The Vancouver walking pack lives at `data/vancouver-walking-pack.json` and is configured in `config.WALKING_CITY_PACKS`.
+- Loaded packs normalize into `bounds`, `stations`, `nodes`, `edges`, and `edgeIndex`.
+- For listing coordinates inside a pack, candidate walking graph edges are found from nearby edge-index cells.
+- The listing coordinate is snapped to the nearest edge within `config.WALKING_SNAP_MAX_METERS`.
+- Station distances from both edge endpoints are combined with the distance from the listing snap point to each endpoint.
+- The shortest distance per station wins.
+- Results are converted to minutes using `config.WALKING_SPEED_METERS_PER_MINUTE`.
+- Results are sorted by minutes, meters, and station name.
+- If no city pack is active, no graph exists, or snapping fails, the module estimates walking distance by multiplying straight-line distance by `config.WALKING_CIRCUITY_FACTOR`.
+
+Walking-time cache and clear behavior:
+
+- Candidate scans are cached briefly because Marketplace maps can contain many nested elements.
+- The cache is cleared when walking-time state becomes stale, including pointer down, window blur, scroll, overlay alignment, overlay hiding, sync changes, and pan smoothing.
+- `T.walkingTime.clear(reason)` resets the candidate cache, latest pointer position, pending animation frame, tooltip visibility, tooltip render signature, and `state.walkingTime.lastClearReason`.
+
+Walking-time debug helpers:
+
+- When `config.DEBUG` is true, `content.js` exposes `getListingMarkerCandidates(...)`, `getNearestStations(...)`, and `getWalkingCityPacks()` through `window.__transitOverlayDebug`.
+- These helpers still call the stable public `T.walkingTime` methods after the split.
 
 ## Decisions Made
 
@@ -65,6 +118,7 @@ Runtime flow:
 - Debug UI, pink outline, and page debug bridge are disabled by default for release testing.
 - Commute routing tracks active route state during graph search instead of only the current stop. This prevents unrealistic downtown micro-transfer chains such as `Bus 6 -> Bus 2 -> Bus 44 -> Bus N22 -> Bus 240`.
 - Commute routing currently caps displayed graph itineraries at two transit legs. If no simple static-GTFS route is found, the extension falls back to a rough direct stop-to-stop estimate.
+- Publishing UI pass keeps the overlay click-through model unchanged. Only the Transit and Commute buttons/panel accept pointer events; map markers, route lines, and hover estimate tooltips remain non-intercepting.
 
 ## Global Release Recommendation
 
@@ -189,6 +243,12 @@ Runtime modules:
 - `scripts/overlay.js`
 - `scripts/pan-smoothing.js`
 - `scripts/station-hover.js`
+- `scripts/transit-time.js`
+- `scripts/walking-time-utils.js`
+- `scripts/walking-time-city-packs.js`
+- `scripts/walking-time-candidates.js`
+- `scripts/walking-time-tooltip.js`
+- `scripts/walking-time.js`
 - `scripts/diagnostics.js`
 - `scripts/debug-bridge.js`
 - `scripts/page-debug-bridge.js`
