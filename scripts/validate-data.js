@@ -4,16 +4,23 @@ const fs = require("fs");
 const path = require("path");
 
 const root = path.resolve(__dirname, "..");
-const allowedLines = new Set(["Expo", "Millennium", "Canada"]);
+const allowedLines = new Set(["Expo", "Millennium", "Canada", "Line 1", "Line 2", "Line 4", "Line 5", "Line 6"]);
 const requiredWebResources = new Set([
   "data/vancouver-stations.geojson",
   "data/vancouver-lines.geojson",
   "data/vancouver-walking-pack.json",
+  "data/toronto-stations.geojson",
+  "data/toronto-lines.geojson",
+  "data/toronto-walking-pack.json",
   "data/city-packs/index.json",
   "data/city-packs/vancouver/manifest.json",
   "data/city-packs/vancouver/addresses.json",
   "data/city-packs/vancouver/transit.json",
-  "data/city-packs/vancouver/grid.json"
+  "data/city-packs/vancouver/grid.json",
+  "data/city-packs/toronto/manifest.json",
+  "data/city-packs/toronto/addresses.json",
+  "data/city-packs/toronto/transit.json",
+  "data/city-packs/toronto/grid.json"
 ]);
 
 function main() {
@@ -21,19 +28,71 @@ function main() {
   const stations = readJson("data/vancouver-stations.geojson");
   const lines = readJson("data/vancouver-lines.geojson");
   const walkingPack = readJson("data/vancouver-walking-pack.json");
+  const torontoStations = readJson("data/toronto-stations.geojson");
+  const torontoLines = readJson("data/toronto-lines.geojson");
+  const torontoWalkingPack = readJson("data/toronto-walking-pack.json");
   const cityIndex = readJson("data/city-packs/index.json");
   const cityManifest = readJson("data/city-packs/vancouver/manifest.json");
   const addressPack = readJson("data/city-packs/vancouver/addresses.json");
   const transitPack = readJson("data/city-packs/vancouver/transit.json");
   const cityGrid = readJson("data/city-packs/vancouver/grid.json");
+  const torontoCityManifest = readJson("data/city-packs/toronto/manifest.json");
+  const torontoAddressPack = readJson("data/city-packs/toronto/addresses.json");
+  const torontoTransitPack = readJson("data/city-packs/toronto/transit.json");
+  const torontoCityGrid = readJson("data/city-packs/toronto/grid.json");
 
   validateManifest(manifest);
-  const stationMap = validateStations(stations);
-  validateLines(lines, stationMap);
+  const stationMap = validateStations(stations, { minStations: 50 });
+  validateLines(lines, stationMap, {
+    minFeatures: 5,
+    requiredBranches: [
+      "Expo:King George",
+      "Expo:Production Way-University",
+      "Millennium:Lafarge Lake-Douglas",
+      "Canada:Richmond-Brighouse",
+      "Canada:YVR-Airport"
+    ]
+  });
   validateWalkingPack(walkingPack);
-  validateCityPack({ cityIndex, cityManifest, addressPack, transitPack, cityGrid });
+  const torontoStationMap = validateStations(torontoStations, { minStations: 100 });
+  validateLines(torontoLines, torontoStationMap, {
+    minFeatures: 5,
+    allowApproxCoordinates: true,
+    requiredBranches: [
+      "Line 1:Line 1 (Yonge-University)",
+      "Line 2:Line 2 (Bloor - Danforth)",
+      "Line 4:Line 4 (Sheppard)",
+      "Line 5:Line 5 Eglinton",
+      "Line 6:Line 6 Finch West"
+    ]
+  });
+  validateWalkingPack(torontoWalkingPack);
+  validateCityPack({ cityIndex, cityManifest, addressPack, transitPack, cityGrid }, {
+    id: "vancouver",
+    minAddresses: 50000,
+    minStops: 8000,
+    minBusStops: 8000,
+    minMetroStops: 50,
+    minRoutes: 200,
+    minRouteEdges: 10000
+  });
+  validateCityPack({
+    cityIndex,
+    cityManifest: torontoCityManifest,
+    addressPack: torontoAddressPack,
+    transitPack: torontoTransitPack,
+    cityGrid: torontoCityGrid
+  }, {
+    id: "toronto",
+    minAddresses: 200000,
+    minStops: 9000,
+    minBusStops: 8500,
+    minMetroStops: 100,
+    minRoutes: 200,
+    minRouteEdges: 10000
+  });
 
-  console.log("Validation passed: manifest, station data, route line data, walking pack, and city pack are valid.");
+  console.log("Validation passed: manifest, station data, route line data, walking packs, and city packs are valid.");
 }
 
 function readJson(relativePath) {
@@ -58,7 +117,7 @@ function validateManifest(manifest) {
   }
 }
 
-function validateStations(geojson) {
+function validateStations(geojson, options = {}) {
   assert(geojson.type === "FeatureCollection", "Station GeoJSON must be a FeatureCollection.");
   assert(Array.isArray(geojson.features), "Station GeoJSON must contain features.");
 
@@ -87,14 +146,14 @@ function validateStations(geojson) {
     });
   }
 
-  assert(stationMap.size >= 50, "Station GeoJSON should contain the SkyTrain station set.");
+  assert(stationMap.size >= (options.minStations || 1), "Station GeoJSON should contain the expected station set.");
   return stationMap;
 }
 
-function validateLines(geojson, stationMap) {
+function validateLines(geojson, stationMap, options = {}) {
   assert(geojson.type === "FeatureCollection", "Route line GeoJSON must be a FeatureCollection.");
   assert(Array.isArray(geojson.features), "Route line GeoJSON must contain features.");
-  assert(geojson.features.length >= 5, "Route line GeoJSON must include the required branches.");
+  assert(geojson.features.length >= (options.minFeatures || 1), "Route line GeoJSON must include the required branches.");
 
   const branches = new Set();
 
@@ -118,17 +177,15 @@ function validateLines(geojson, stationMap) {
       const station = stationMap.get(stationName);
       assert(station, `${line} ${branch} references missing station ${stationName}.`);
       assert(station.lines.includes(line), `${line} ${branch} references ${stationName}, but the station is not on ${line}.`);
-      assertCoordinatesEqual(coordinates[index], station.coordinates, `${line} ${branch} ${stationName}`);
+      if (options.allowApproxCoordinates) {
+        assertValidCoordinates(coordinates[index], `${line} ${branch} ${stationName}`);
+      } else {
+        assertCoordinatesEqual(coordinates[index], station.coordinates, `${line} ${branch} ${stationName}`);
+      }
     });
   }
 
-  for (const required of [
-    "Expo:King George",
-    "Expo:Production Way-University",
-    "Millennium:Lafarge Lake-Douglas",
-    "Canada:Richmond-Brighouse",
-    "Canada:YVR-Airport"
-  ]) {
+  for (const required of options.requiredBranches || []) {
     assert(branches.has(required), `Missing required route branch ${required}.`);
   }
 }
@@ -162,13 +219,14 @@ function validateWalkingPack(pack) {
   }
 }
 
-function validateCityPack({ cityIndex, cityManifest, addressPack, transitPack, cityGrid }) {
+function validateCityPack({ cityIndex, cityManifest, addressPack, transitPack, cityGrid }, options = {}) {
+  const id = options.id || cityManifest.id;
   assert(cityIndex.version === 1, "City pack index version must be 1.");
   assert(Array.isArray(cityIndex.packs) && cityIndex.packs.length > 0, "City pack index must contain packs.");
-  assert(cityIndex.packs.some((pack) => pack.id === "vancouver"), "City pack index must include Vancouver.");
+  assert(cityIndex.packs.some((pack) => pack.id === id), `City pack index must include ${id}.`);
 
   assert(cityManifest.schema === "transit-city-pack", "City manifest must use transit-city-pack schema.");
-  assert(cityManifest.id === "vancouver", "City manifest id must be vancouver.");
+  assert(cityManifest.id === id, `City manifest id must be ${id}.`);
   validateBounds(cityManifest.bounds, "City manifest bounds");
   assert(cityManifest.resources?.addresses?.resource === "addresses.json", "City manifest must reference addresses.json.");
   assert(cityManifest.resources?.transit?.resource === "transit.json", "City manifest must reference transit.json.");
@@ -176,7 +234,7 @@ function validateCityPack({ cityIndex, cityManifest, addressPack, transitPack, c
 
   assert(addressPack.schema === "transit-address-pack", "Address pack schema is invalid.");
   assert(Array.isArray(addressPack.entries), "Address pack entries must be an array.");
-  assert(addressPack.entries.length >= 50000, "Address pack should include Vancouver property addresses.");
+  assert(addressPack.entries.length >= (options.minAddresses || 1), "Address pack should include city addresses.");
 
   const addressCells = new Set();
   for (const [index, entry] of addressPack.entries.entries()) {
@@ -195,9 +253,9 @@ function validateCityPack({ cityIndex, cityManifest, addressPack, transitPack, c
   assert(Array.isArray(transitPack.routes), "Transit stop pack routes must be an array.");
   assert(Array.isArray(transitPack.routeEdges), "Transit stop pack routeEdges must be an array.");
   assert(Array.isArray(transitPack.transferEdges), "Transit stop pack transferEdges must be an array.");
-  assert(transitPack.stops.length >= 8000, "Transit stop pack should include TransLink bus stops.");
-  assert(transitPack.routes.length >= 200, "Transit stop pack should include GTFS routes.");
-  assert(transitPack.routeEdges.length >= 10000, "Transit stop pack should include GTFS route edges.");
+  assert(transitPack.stops.length >= (options.minStops || 1), "Transit stop pack should include GTFS stops.");
+  assert(transitPack.routes.length >= (options.minRoutes || 1), "Transit stop pack should include GTFS routes.");
+  assert(transitPack.routeEdges.length >= (options.minRouteEdges || 1), "Transit stop pack should include GTFS route edges.");
 
   const stopCells = new Set();
   let busCount = 0;
@@ -215,8 +273,8 @@ function validateCityPack({ cityIndex, cityManifest, addressPack, transitPack, c
     if (mode === "metro") metroCount += 1;
     stopCells.add(cellId);
   }
-  assert(busCount >= 8000, "Transit stop pack should include at least 8,000 bus stops.");
-  assert(metroCount >= 50, "Transit stop pack should include SkyTrain station stops.");
+  assert(busCount >= (options.minBusStops || 0), "Transit stop pack should include expected bus/surface stops.");
+  assert(metroCount >= (options.minMetroStops || 0), "Transit stop pack should include expected rapid transit stops.");
 
   for (const [index, route] of transitPack.routes.entries()) {
     assert(Array.isArray(route) && route.length >= 4, `Transit route ${index} must use compact array format.`);

@@ -9,7 +9,7 @@ const DEFAULT_STATION_SNAP_METERS = 500;
 
 const args = parseArgs(process.argv.slice(2));
 
-if (!args.osm || !args.stations || !args.out || !args.id) {
+if ((!args.osm && !args.geojson) || !args.stations || !args.out || !args.id) {
   console.error(
     [
       "Usage:",
@@ -17,10 +17,12 @@ if (!args.osm || !args.stations || !args.out || !args.id) {
       "  --id vancouver \\",
       "  --name \"Metro Vancouver\" \\",
       "  --osm path/to/overpass.json \\",
+      "  # or --geojson path/to/pedestrian-network.geojson \\",
       "  --stations data/vancouver-stations.geojson \\",
       "  --out data/vancouver-walking-pack.json",
       "",
-      "The OSM input should be Overpass JSON containing walkable highway ways and their nodes."
+      "The OSM input should be Overpass JSON containing walkable highway ways and their nodes.",
+      "The GeoJSON input should contain LineString or MultiLineString pedestrian network features."
     ].join("\n")
   );
   process.exit(1);
@@ -30,10 +32,10 @@ function main() {
   const stationCount = Number(args.stationCount || DEFAULT_STATION_COUNT);
   const maxDistanceMeters = Number(args.maxDistanceMeters || DEFAULT_MAX_DISTANCE_METERS);
   const stationSnapMeters = Number(args.stationSnapMeters || DEFAULT_STATION_SNAP_METERS);
-  const osm = readJson(args.osm);
+  const network = readJson(args.osm || args.geojson);
   const stationsGeojson = readJson(args.stations);
   const stations = normalizeStations(stationsGeojson);
-  const graph = buildGraph(osm);
+  const graph = args.geojson ? buildGraphFromGeoJson(network) : buildGraph(network);
   if (!graph.nodes.length || !graph.edges.length) {
     console.error("No walkable graph nodes/edges were found in the OSM input.");
     process.exit(1);
@@ -68,6 +70,64 @@ function main() {
       `snapped stations: ${stationSources.length}/${stations.length}`
     ].join("\n")
   );
+}
+
+function buildGraphFromGeoJson(geojson) {
+  const nodesById = new Map();
+  const rawEdges = [];
+  const seenEdges = new Set();
+
+  for (const feature of geojson.features || []) {
+    for (const line of getFeatureLines(feature)) {
+      for (let index = 1; index < line.length; index += 1) {
+        const from = normalizeGeoJsonCoordinate(line[index - 1]);
+        const to = normalizeGeoJsonCoordinate(line[index]);
+        if (!from || !to) continue;
+
+        nodesById.set(from.id, from);
+        nodesById.set(to.id, to);
+
+        const edgeKey = [from.id, to.id].sort().join("|");
+        if (seenEdges.has(edgeKey)) continue;
+        seenEdges.add(edgeKey);
+
+        const meters = haversineMeters(from, to);
+        if (!Number.isFinite(meters) || meters <= 0) continue;
+        rawEdges.push([from.id, to.id, Math.round(meters)]);
+      }
+    }
+  }
+
+  const nodes = Array.from(nodesById.values());
+  const adjacency = new Map(nodes.map((node) => [node.id, []]));
+
+  for (const [fromId, toId, meters] of rawEdges) {
+    adjacency.get(fromId).push({ toId, meters });
+    adjacency.get(toId).push({ toId: fromId, meters });
+  }
+
+  return {
+    nodes,
+    nodeById: nodesById,
+    edges: rawEdges,
+    adjacency
+  };
+}
+
+function getFeatureLines(feature) {
+  const geometry = feature.geometry || {};
+  if (geometry.type === "LineString") return [geometry.coordinates || []];
+  if (geometry.type === "MultiLineString") return geometry.coordinates || [];
+  return [];
+}
+
+function normalizeGeoJsonCoordinate(coordinate) {
+  const lng = Number(coordinate?.[0]);
+  const lat = Number(coordinate?.[1]);
+  if (!isValidLatLng({ lat, lng })) return null;
+
+  const id = `${roundCoordinate(lat)}:${roundCoordinate(lng)}`;
+  return { id, lat, lng };
 }
 
 function buildGraph(osmData) {
@@ -320,7 +380,7 @@ function normalizeLines(value) {
 }
 
 function isValidLatLng(value) {
-  return isValidLatitude(Number(value.lat)) && isValidLongitude(Number(value.lon));
+  return isValidLatitude(Number(value.lat)) && isValidLongitude(Number(value.lng ?? value.lon));
 }
 
 function isValidLatitude(value) {

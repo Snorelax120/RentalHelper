@@ -514,6 +514,31 @@
   color: #ffffff;
 }
 
+.transit-station-hover-lines span[data-line="Line 1"] {
+  background: #d5c82b;
+  color: #172233;
+}
+
+.transit-station-hover-lines span[data-line="Line 2"] {
+  background: #008000;
+  color: #ffffff;
+}
+
+.transit-station-hover-lines span[data-line="Line 4"] {
+  background: #b300b3;
+  color: #ffffff;
+}
+
+.transit-station-hover-lines span[data-line="Line 5"] {
+  background: #ff8000;
+  color: #172233;
+}
+
+.transit-station-hover-lines span[data-line="Line 6"] {
+  background: #808080;
+  color: #ffffff;
+}
+
 #transit-walking-time {
   position: fixed;
   z-index: 504;
@@ -597,6 +622,31 @@
   color: #ffffff;
 }
 
+.transit-walking-time-line[data-line="Line 1"] {
+  background: #d5c82b;
+  color: #172233;
+}
+
+.transit-walking-time-line[data-line="Line 2"] {
+  background: #008000;
+  color: #ffffff;
+}
+
+.transit-walking-time-line[data-line="Line 4"] {
+  background: #b300b3;
+  color: #ffffff;
+}
+
+.transit-walking-time-line[data-line="Line 5"] {
+  background: #ff8000;
+  color: #172233;
+}
+
+.transit-walking-time-line[data-line="Line 6"] {
+  background: #808080;
+  color: #ffffff;
+}
+
 .transit-commute-estimate {
   margin: 8px -2px -2px;
   padding: 8px;
@@ -638,6 +688,11 @@
 .transit-commute-step[data-kind="metro"] .transit-commute-step-badge {
   background: #00a7e1;
   color: #ffffff;
+}
+
+.transit-commute-step[data-kind="transfer"] .transit-commute-step-badge {
+  background: #f3d78a;
+  color: #172233;
 }
 
 .transit-commute-step-text {

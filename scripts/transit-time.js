@@ -50,8 +50,8 @@
       <div id="transit-commute-suggestions" role="listbox" hidden></div>
       <div class="transit-commute-mode-title">Transit modes</div>
       <div class="transit-commute-modes" aria-label="Transit modes">
-        <label><input type="checkbox" data-commute-mode="metro"><span>SkyTrain</span></label>
-        <label><input type="checkbox" data-commute-mode="bus"><span>Bus</span></label>
+        <label><input type="checkbox" data-commute-mode="metro"><span>${escapeHtml(getModeLabel("metro"))}</span></label>
+        <label><input type="checkbox" data-commute-mode="bus"><span>${escapeHtml(getModeLabel("bus"))}</span></label>
       </div>
       <div class="transit-commute-actions">
         <button type="button" data-commute-action="clear">Clear destination</button>
@@ -495,14 +495,14 @@
       .reduce((sum, edge) => sum + getEdgeCostMinutes(edge, pack), 0) +
       Math.max(0, routeSegments.length - 1) * config.COMMUTE_ROUTE_CHANGE_PENALTY_MINUTES;
     const routeLabels = routeSegments.map((segment) => segment.label);
-    const modeLabels = Array.from(new Set(routeSegments.map((segment) => segment.mode === "metro" ? "SkyTrain" : "Bus")));
+    const modeLabels = Array.from(new Set(routeSegments.map((segment) => getModeLabel(segment.mode))));
     const correctedTotalMinutes = Math.round(
       accessStop.walkMinutes + transitMinutes + transferWalkMinutes + destinationStop.walkMinutes
     );
 
     return {
       mode: routeSegments.some((segment) => segment.mode === "bus") ? "bus" : "metro",
-      label: routeLabels.length ? routeLabels.join(" + ") : modeLabels.join(" + "),
+      label: routeLabels.length ? routeLabels.join(" -> ") : modeLabels.join(" -> "),
       confidence: "static-gtfs",
       destinationLabel: state.transitTime.destination?.label || "destination",
       totalMinutes: Math.max(totalMinutes, correctedTotalMinutes),
@@ -521,9 +521,15 @@
   function summarizeRouteSegments(pathEdges, pack) {
     const segments = [];
     let lastWasTransfer = false;
+    let pendingTransferMinutes = 0;
+    let pendingTransferFromStop = null;
+    let pendingTransferToStop = null;
 
     for (const edge of pathEdges) {
       if (edge.transfer) {
+        pendingTransferMinutes += getEdgeCostMinutes(edge, pack);
+        pendingTransferFromStop = pendingTransferFromStop || pack.stops[edge.from];
+        pendingTransferToStop = pack.stops[edge.to];
         lastWasTransfer = true;
         continue;
       }
@@ -538,6 +544,7 @@
         continue;
       }
 
+      const hasPreviousTransitSegment = segments.length > 0;
       segments.push({
         routeIndex: edge.routeIndex,
         label: route.label,
@@ -545,8 +552,16 @@
         mode: route.mode,
         minutes: getEdgeCostMinutes(edge, pack),
         fromStop: pack.stops[edge.from],
-        toStop: pack.stops[edge.to]
+        toStop: pack.stops[edge.to],
+        transferMinutes: hasPreviousTransitSegment
+          ? Math.max(1, Math.round(pendingTransferMinutes + config.COMMUTE_ROUTE_CHANGE_PENALTY_MINUTES))
+          : 0,
+        transferFromStop: pendingTransferFromStop,
+        transferToStop: pendingTransferToStop
       });
+      pendingTransferMinutes = 0;
+      pendingTransferFromStop = null;
+      pendingTransferToStop = null;
       lastWasTransfer = false;
     }
 
@@ -556,7 +571,9 @@
   function isReadableRouteEstimate(estimate) {
     if (!estimate?.routeSegments?.length) return false;
     const maxRouteSegments = Math.max(1, Number(config.COMMUTE_MAX_ROUTE_SEGMENTS) || 2);
-    return estimate.routeSegments.length <= maxRouteSegments;
+    const maxBusRouteSegments = Math.max(1, Number(config.COMMUTE_MAX_BUS_ROUTE_SEGMENTS) || 2);
+    const busSegments = estimate.routeSegments.filter((segment) => segment.mode === "bus").length;
+    return estimate.routeSegments.length <= maxRouteSegments && busSegments <= maxBusRouteSegments;
   }
 
   function compareRouteEstimates(a, b) {
@@ -623,7 +640,7 @@
 
         const estimate = {
           mode,
-          label: mode === "metro" ? "SkyTrain" : "Bus",
+          label: getModeLabel(mode),
           confidence: "rough-direct",
           destinationLabel: destination.label,
           totalMinutes,
@@ -729,10 +746,19 @@
 
     if (estimate.routeSegments?.length) {
       estimate.routeSegments.forEach((segment, index) => {
+        if (index > 0) {
+          steps.push({
+            kind: "transfer",
+            badge: formatStepMinutes(segment.transferMinutes || config.COMMUTE_ROUTE_CHANGE_PENALTY_MINUTES),
+            title: getTransferStepTitle(estimate.routeSegments[index - 1], segment),
+            detail: getTransferStepDetail(estimate.routeSegments[index - 1], segment)
+          });
+        }
+
         steps.push({
           kind: segment.mode,
           badge: formatStepMinutes(segment.minutes),
-          title: `${index === 0 ? "Take" : "Transfer to"} ${formatSegmentLabel(segment)}`,
+          title: `Take ${formatSegmentLabel(segment)}`,
           detail: getSegmentDetail(segment, index)
         });
       });
@@ -782,27 +808,46 @@
     const fromStop = cleanStopName(segment.fromStop?.name);
     const toStop = cleanStopName(segment.toStop?.name);
 
-    if (index === 0) {
-      return fromStop ? `board at ${fromStop}` : "";
-    }
-
-    if (fromStop) return `change at ${fromStop}`;
-    if (toStop) return `toward ${toStop}`;
+    if (fromStop && toStop) return `from ${fromStop} to ${toStop}`;
+    if (fromStop) return `board at ${fromStop}`;
+    if (toStop) return `ride to ${toStop}`;
     return "";
+  }
+
+  function getTransferStepTitle(previousSegment, nextSegment) {
+    if (previousSegment?.mode === "metro" && nextSegment?.mode === "metro") return "Change trains";
+    return `Transfer to ${getModeLabel(nextSegment?.mode).toLowerCase()}`;
+  }
+
+  function getTransferStepDetail(previousSegment, nextSegment) {
+    const fromLabel = formatSegmentLabel(previousSegment);
+    const toLabel = formatSegmentLabel(nextSegment);
+    const transferStop = cleanStopName(
+      nextSegment.transferToStop?.name ||
+        nextSegment.transferFromStop?.name ||
+        nextSegment.fromStop?.name
+    );
+    const routeText = fromLabel && toLabel ? `from ${fromLabel} to ${toLabel}` : toLabel ? `to ${toLabel}` : "";
+    return transferStop ? `${routeText} at ${transferStop}` : routeText;
   }
 
   function getTransitBreakdownLabel(estimate) {
     const modes = new Set((estimate.routeSegments || []).map((segment) => segment.mode));
     if (modes.has("bus") && modes.has("metro")) return "transit";
     if (estimate.mode === "bus") return "bus";
-    if (estimate.mode === "metro") return "SkyTrain";
+    if (estimate.mode === "metro") return "train";
     return "transit";
   }
 
   function formatSegmentLabel(segment) {
+    if (!segment) return "";
     if (segment.mode === "bus") return `Bus ${segment.label}`;
     if (segment.mode === "metro") return segment.label;
     return segment.label;
+  }
+
+  function getModeLabel(mode) {
+    return config.COMMUTE_MODE_LABELS?.[mode] || (mode === "metro" ? "Train" : mode === "bus" ? "Bus" : "Transit");
   }
 
   function cleanStopName(name) {
@@ -873,10 +918,10 @@
     if (state.transitTime.packsLoading) return "Loading offline commute data...";
     if (!state.transitTime.packsLoaded) return "Offline commute data not loaded.";
     if (!state.transitTime.destination) return "Choose a destination to show commute estimates.";
-    if (!hasEnabledMode(state.transitTime.modes)) return "Enable Bus or SkyTrain.";
+    if (!hasEnabledMode(state.transitTime.modes)) return `Enable ${getModeLabel("bus")} or ${getModeLabel("metro")}.`;
     const enabled = [
-      state.transitTime.modes.metro ? "SkyTrain" : "",
-      state.transitTime.modes.bus ? "Bus" : ""
+      state.transitTime.modes.metro ? getModeLabel("metro") : "",
+      state.transitTime.modes.bus ? getModeLabel("bus") : ""
     ].filter(Boolean).join(" + ");
     return `${enabled} estimates enabled.`;
   }
@@ -896,7 +941,7 @@
 
   function getSuggestionMeta(suggestion) {
     if (suggestion.kind === "coordinates") return "Coordinates";
-    if (suggestion.kind === "station") return "SkyTrain station";
+    if (suggestion.kind === "station") return `${getModeLabel("metro")} station`;
     return "Offline address";
   }
 

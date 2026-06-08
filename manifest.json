@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
-  "name": "Vancouver Transit Overlay",
-  "description": "Overlays Vancouver SkyTrain station markers on Facebook Marketplace maps.",
+  "name": "Transit Overlay for  Facebook Marketplace",
+  "description": "Overlays supported city rapid transit stations and offline commute estimates on Facebook Marketplace maps.",
   "version": "0.1.0",
   "permissions": ["storage"],
   "content_scripts": [
@@ -35,17 +35,24 @@
   ],
   "web_accessible_resources": [
     {
-      "resources": [
-        "data/vancouver-stations.geojson",
-        "data/vancouver-lines.geojson",
-        "data/vancouver-walking-pack.json",
-        "data/city-packs/index.json",
-        "data/city-packs/vancouver/manifest.json",
-        "data/city-packs/vancouver/addresses.json",
-        "data/city-packs/vancouver/transit.json",
-        "data/city-packs/vancouver/grid.json",
-        "scripts/page-debug-bridge.js"
-      ],
+        "resources": [
+          "data/vancouver-stations.geojson",
+          "data/vancouver-lines.geojson",
+          "data/vancouver-walking-pack.json",
+          "data/toronto-stations.geojson",
+          "data/toronto-lines.geojson",
+          "data/toronto-walking-pack.json",
+          "data/city-packs/index.json",
+          "data/city-packs/vancouver/manifest.json",
+          "data/city-packs/vancouver/addresses.json",
+          "data/city-packs/vancouver/transit.json",
+          "data/city-packs/vancouver/grid.json",
+          "data/city-packs/toronto/manifest.json",
+          "data/city-packs/toronto/addresses.json",
+          "data/city-packs/toronto/transit.json",
+          "data/city-packs/toronto/grid.json",
+          "scripts/page-debug-bridge.js"
+        ],
       "matches": [
         "https://www.facebook.com/*",
         "https://web.facebook.com/*"

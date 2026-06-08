@@ -83,13 +83,26 @@
   async function loadTransitData() {
     if (state.stationsGeojson && state.linesGeojson) return;
 
-    const [stations, lines] = await Promise.all([
-      fetch(chrome.runtime.getURL("data/vancouver-stations.geojson")).then((response) => response.json()),
-      fetch(chrome.runtime.getURL("data/vancouver-lines.geojson")).then((response) => response.json())
-    ]);
+    const datasets = await Promise.all(
+      config.OVERLAY_CITY_DATASETS.map(async (entry) => {
+        const [stations, lines] = await Promise.all([
+          fetch(chrome.runtime.getURL(entry.stations)).then((response) => response.json()),
+          fetch(chrome.runtime.getURL(entry.lines)).then((response) => response.json())
+        ]);
 
-    state.stationsGeojson = stations;
-    state.linesGeojson = lines;
+        return { stations, lines };
+      })
+    );
+
+    state.stationsGeojson = mergeFeatureCollections(datasets.map((dataset) => dataset.stations));
+    state.linesGeojson = mergeFeatureCollections(datasets.map((dataset) => dataset.lines));
+  }
+
+  function mergeFeatureCollections(collections) {
+    return {
+      type: "FeatureCollection",
+      features: collections.flatMap((collection) => collection.features || [])
+    };
   }
 
   function refreshTransitLayers() {

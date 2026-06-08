@@ -5,14 +5,28 @@ const path = require("path");
 
 const root = path.resolve(__dirname, "..");
 const args = parseArgs(process.argv.slice(2));
+const CITY_ID = args.id || "vancouver";
+const CITY_NAME = args.name || (CITY_ID === "vancouver" ? "Metro Vancouver" : titleCaseStreet(CITY_ID));
+const CITY_LABEL = args.cityLabel || CITY_NAME.replace(/^Metro\s+/i, "");
+const CITY_BOUNDS = parseBounds(args.bounds) || {
+  west: -123.35,
+  south: 49.0,
+  east: -122.45,
+  north: 49.45
+};
 
 if (!args.stops || !args.addresses || !args.stations || !args.outDir) {
   console.error(
     [
       "Usage:",
       "node scripts/build-city-pack.js \\",
+      "  --id vancouver \\",
+      "  --name \"Metro Vancouver\" \\",
+      "  --cityLabel Vancouver \\",
+      "  --bounds -123.35,49.0,-122.45,49.45 \\",
       "  --stops tmp/gtfs/stops.txt \\",
       "  --addresses tmp/address/vancouver-property-addresses.json \\",
+      "  --addressFormat vancouver-property-addresses \\",
       "  --routes tmp/gtfs/routes.txt \\",
       "  --trips tmp/gtfs/trips.txt \\",
       "  --stopTimes tmp/gtfs/stop_times.txt \\",
@@ -24,12 +38,6 @@ if (!args.stops || !args.addresses || !args.stations || !args.outDir) {
   process.exit(1);
 }
 
-const CITY_BOUNDS = {
-  west: -123.35,
-  south: 49.0,
-  east: -122.45,
-  north: 49.45
-};
 const GRID_CELL_DEGREES = 0.005;
 const EARTH_RADIUS_METERS = 6371008.8;
 
@@ -37,7 +45,7 @@ function main() {
   const outDir = path.resolve(root, args.outDir);
   fs.mkdirSync(outDir, { recursive: true });
 
-  const addresses = buildAddressEntries(readJson(args.addresses), readJson(args.stations));
+  const addresses = buildAddressEntries(readAddressRows(args.addresses), readJson(args.stations));
   const transit = buildTransitEntries({
     stopRows: readCsv(args.stops),
     stationsGeojson: readJson(args.stations),
@@ -48,17 +56,7 @@ function main() {
   const grid = buildGrid(addresses.entries, transit.stops);
   const manifest = buildManifest({ addresses, transit, grid });
 
-  writeJson(path.join(root, "data/city-packs/index.json"), {
-    version: 1,
-    packs: [
-      {
-        id: "vancouver",
-        name: "Metro Vancouver",
-        bounds: CITY_BOUNDS,
-        resource: "data/city-packs/vancouver/manifest.json"
-      }
-    ]
-  });
+  updateCityPackIndex();
   writeJson(path.join(outDir, "manifest.json"), manifest);
   writeJson(path.join(outDir, "addresses.json"), addresses);
   writeJson(path.join(outDir, "transit.json"), transit);
@@ -79,15 +77,13 @@ function buildAddressEntries(rawAddresses, stationsGeojson) {
   const seen = new Set();
 
   for (const row of rawAddresses) {
-    const civicNumber = normalizeCivicNumber(row.civic_number);
-    const street = normalizeStreet(row.std_street);
-    const lat = roundCoordinate(row.geo_point_2d?.lat ?? row.geom?.geometry?.coordinates?.[1]);
-    const lng = roundCoordinate(row.geo_point_2d?.lon ?? row.geom?.geometry?.coordinates?.[0]);
+    const address = normalizeAddressRow(row);
+    if (!address) continue;
 
-    if (!civicNumber || !street || !isValidLatLng({ lat, lng }) || !isInsideBounds({ lat, lng })) continue;
+    const { label, searchText, lat, lng } = address;
+    if (!label || !searchText || !isValidLatLng({ lat, lng }) || !isInsideBounds({ lat, lng })) continue;
 
-    const label = `${civicNumber} ${titleCaseStreet(street)}, Vancouver`;
-    const search = normalizeSearchText(`${civicNumber} ${street} Vancouver`);
+    const search = normalizeSearchText(searchText);
     const key = `${search}|${lat}|${lng}`;
     if (seen.has(key)) continue;
     seen.add(key);
@@ -96,7 +92,7 @@ function buildAddressEntries(rawAddresses, stationsGeojson) {
   }
 
   for (const station of normalizeStations(stationsGeojson)) {
-    const search = normalizeSearchText(`${station.name} station skytrain ${station.lines.join(" ")} Vancouver`);
+    const search = normalizeSearchText(`${station.name} station ${station.lines.join(" ")} ${CITY_LABEL}`);
     entries.push([
       `${station.name} Station`,
       search,
@@ -112,9 +108,9 @@ function buildAddressEntries(rawAddresses, stationsGeojson) {
   return {
     schema: "transit-address-pack",
     version: 1,
-    id: "vancouver",
-    name: "Vancouver Address Lookup",
-    source: "City of Vancouver property-addresses open data plus bundled SkyTrain stations",
+    id: CITY_ID,
+    name: `${CITY_NAME} Address Lookup`,
+    source: args.addressSource || `${CITY_LABEL} address open data plus bundled rapid transit stations`,
     bounds: CITY_BOUNDS,
     fields: ["label", "search", "lat", "lng", "cellId", "kind"],
     entries
@@ -188,9 +184,9 @@ function buildTransitEntries({ stopRows, stationsGeojson, routeRows, tripRows, s
   return {
     schema: "transit-stop-pack",
     version: 1,
-    id: "vancouver",
-    name: "Metro Vancouver Transit Stops",
-    source: "TransLink GTFS Static Data and bundled SkyTrain station GeoJSON",
+    id: CITY_ID,
+    name: `${CITY_NAME} Transit Stops`,
+    source: args.transitSource || "GTFS Static Data and bundled rapid transit station GeoJSON",
     bounds: CITY_BOUNDS,
     fields: ["id", "code", "name", "mode", "lat", "lng", "cellId", "routes"],
     routeFields: ["id", "label", "name", "mode"],
@@ -209,7 +205,7 @@ function buildRouteGraph({ routeRows, tripRows, stopTimesPath }) {
   const routeIndexById = new Map();
 
   for (const row of routeRows) {
-    const mode = getRouteMode(row.route_type);
+    const mode = getRouteMode(row);
     if (!mode) continue;
 
     const label = getRouteLabel(row, mode);
@@ -353,7 +349,7 @@ function buildGrid(addressEntries, transitStops) {
   return {
     schema: "transit-city-grid",
     version: 1,
-    id: "vancouver",
+    id: CITY_ID,
     cellDegrees: GRID_CELL_DEGREES,
     bounds: CITY_BOUNDS,
     fields: ["id", "addressIds", "transitStopIds"],
@@ -367,8 +363,8 @@ function buildManifest({ addresses, transit, grid }) {
   return {
     schema: "transit-city-pack",
     version: 1,
-    id: "vancouver",
-    name: "Metro Vancouver",
+    id: CITY_ID,
+    name: CITY_NAME,
     bounds: CITY_BOUNDS,
     grid: {
       type: "fixed-lat-lng",
@@ -387,11 +383,41 @@ function buildManifest({ addresses, transit, grid }) {
       },
       walking: args.walking
         ? {
-            resource: path.relative(path.join(root, "data/city-packs/vancouver"), path.resolve(root, args.walking))
+            resource: path.relative(path.resolve(root, args.outDir), path.resolve(root, args.walking))
+              .split(path.sep)
+              .join("/")
           }
         : null
     }
   };
+}
+
+function updateCityPackIndex() {
+  const indexPath = path.join(root, "data/city-packs/index.json");
+  let packs = [];
+
+  if (fs.existsSync(indexPath)) {
+    try {
+      packs = JSON.parse(fs.readFileSync(indexPath, "utf8")).packs || [];
+    } catch (_error) {
+      packs = [];
+    }
+  }
+
+  const resource = path.relative(root, path.join(root, args.outDir, "manifest.json")).split(path.sep).join("/");
+  packs = packs.filter((pack) => pack.id !== CITY_ID);
+  packs.push({
+    id: CITY_ID,
+    name: CITY_NAME,
+    bounds: CITY_BOUNDS,
+    resource
+  });
+  packs.sort((a, b) => a.id.localeCompare(b.id));
+
+  writeJson(indexPath, {
+    version: 1,
+    packs
+  });
 }
 
 function ensureCell(cells, id) {
@@ -431,6 +457,19 @@ function readCsv(relativePath) {
   const rows = parseCsv(text);
   const headers = rows.shift();
   return rows.map((row) => Object.fromEntries(headers.map((header, index) => [header, row[index] ?? ""])));
+}
+
+function readAddressRows(relativePath) {
+  const absolutePath = path.resolve(root, relativePath);
+  const text = fs.readFileSync(absolutePath, "utf8");
+
+  if (args.addressFormat === "csv" || args.addressFormat === "toronto-oar" || /\.csv$/i.test(relativePath)) {
+    const rows = parseCsv(text);
+    const headers = rows.shift();
+    return rows.map((row) => Object.fromEntries(headers.map((header, index) => [header, row[index] ?? ""])));
+  }
+
+  return JSON.parse(text);
 }
 
 function readCsvRowsByLine(relativePath, onRow) {
@@ -531,6 +570,49 @@ function normalizeSearchText(value) {
     .replace(/\s+/g, " ");
 }
 
+function normalizeAddressRow(row) {
+  if (args.addressFormat === "toronto-oar") {
+    const label = cleanStopName(row.ADDRESS_FULL || `${row.ADDRESS_NUMBER || ""} ${row.LINEAR_NAME_FULL || ""}`);
+    const point = parseGeoJsonPoint(row.geometry);
+    const lat = roundCoordinate(point?.lat);
+    const lng = roundCoordinate(point?.lng);
+    return {
+      label: `${label}, ${CITY_LABEL}`,
+      searchText: `${label} ${CITY_LABEL}`,
+      lat,
+      lng
+    };
+  }
+
+  const civicNumber = normalizeCivicNumber(row.civic_number);
+  const street = normalizeStreet(row.std_street);
+  const lat = roundCoordinate(row.geo_point_2d?.lat ?? row.geom?.geometry?.coordinates?.[1]);
+  const lng = roundCoordinate(row.geo_point_2d?.lon ?? row.geom?.geometry?.coordinates?.[0]);
+  if (!civicNumber || !street) return null;
+
+  return {
+    label: `${civicNumber} ${titleCaseStreet(street)}, ${CITY_LABEL}`,
+    searchText: `${civicNumber} ${street} ${CITY_LABEL}`,
+    lat,
+    lng
+  };
+}
+
+function parseGeoJsonPoint(value) {
+  if (!value) return null;
+
+  try {
+    const geometry = typeof value === "string" ? JSON.parse(value) : value;
+    const coordinates = geometry?.coordinates;
+    return {
+      lng: Number(coordinates?.[0]),
+      lat: Number(coordinates?.[1])
+    };
+  } catch (_error) {
+    return null;
+  }
+}
+
 function normalizeCivicNumber(value) {
   return String(value || "").trim().replace(/\s+/g, "");
 }
@@ -570,14 +652,19 @@ function addStopRoute(map, stopId, value) {
   map.set(stopId, entries);
 }
 
-function getRouteMode(routeType) {
-  if (String(routeType) === "1") return "metro";
-  if (String(routeType) === "3") return "bus";
+function getRouteMode(row) {
+  const routeType = String(row.route_type);
+  if (routeType === "1") return "metro";
+  if (routeType === "3") return "bus";
+  if (routeType === "0") {
+    if (/^Line\s+(5|6)\b/i.test(row.route_long_name || "")) return "metro";
+    return "bus";
+  }
   return null;
 }
 
 function getRouteLabel(row, mode) {
-  if (mode === "metro") return row.route_long_name || "SkyTrain";
+  if (mode === "metro") return row.route_long_name || "Train";
   return String(row.route_short_name || row.route_long_name || "Bus").replace(/^0+(\d)/, "$1");
 }
 
@@ -626,6 +713,14 @@ function toRadians(value) {
 function roundCoordinate(value) {
   const number = Number(value);
   return Number.isFinite(number) ? Math.round(number * 1e6) / 1e6 : NaN;
+}
+
+function parseBounds(value) {
+  if (!value) return null;
+  const [west, south, east, north] = String(value).split(",").map(Number);
+  if (![west, south, east, north].every(Number.isFinite)) return null;
+  if (west >= east || south >= north) return null;
+  return { west, south, east, north };
 }
 
 function parseArgs(argv) {

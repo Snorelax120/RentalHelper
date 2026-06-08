@@ -46,6 +46,11 @@
         id: "vancouver",
         name: "Metro Vancouver",
         resource: "data/vancouver-walking-pack.json"
+      },
+      {
+        id: "toronto",
+        name: "Toronto",
+        resource: "data/toronto-walking-pack.json"
       }
     ],
     TRANSIT_CITY_PACKS: [
@@ -53,6 +58,23 @@
         id: "vancouver",
         name: "Metro Vancouver",
         resource: "data/city-packs/vancouver/manifest.json"
+      },
+      {
+        id: "toronto",
+        name: "Toronto",
+        resource: "data/city-packs/toronto/manifest.json"
+      }
+    ],
+    OVERLAY_CITY_DATASETS: [
+      {
+        id: "vancouver",
+        stations: "data/vancouver-stations.geojson",
+        lines: "data/vancouver-lines.geojson"
+      },
+      {
+        id: "toronto",
+        stations: "data/toronto-stations.geojson",
+        lines: "data/toronto-lines.geojson"
       }
     ],
     COMMUTE_RESULT_STOP_LIMIT: 8,
@@ -64,20 +86,35 @@
     COMMUTE_METRO_TIME_MULTIPLIER: 1,
     COMMUTE_TRANSFER_PENALTY_MINUTES: 3,
     COMMUTE_ROUTE_CHANGE_PENALTY_MINUTES: 3,
-    COMMUTE_MAX_ROUTE_SEGMENTS: 2,
+    COMMUTE_MAX_ROUTE_SEGMENTS: 3,
+    COMMUTE_MAX_BUS_ROUTE_SEGMENTS: 2,
+    COMMUTE_MODE_LABELS: {
+      metro: "Train",
+      bus: "Bus"
+    },
     TRANSIT_MAX_RESULT_MINUTES: 120,
     MIN_MAP_WIDTH: 320,
     MIN_MAP_HEIGHT: 280,
     lineColors: {
       Expo: "#005596",
       Millennium: "#FFCD00",
-      Canada: "#00A7E1"
+      Canada: "#00A7E1",
+      "Line 1": "#D5C82B",
+      "Line 2": "#008000",
+      "Line 4": "#B300B3",
+      "Line 5": "#FF8000",
+      "Line 6": "#808080"
     },
-    lineNames: ["Expo", "Millennium", "Canada"],
+    lineNames: ["Expo", "Millennium", "Canada", "Line 1", "Line 2", "Line 4", "Line 5", "Line 6"],
     DEFAULT_VISIBLE_LINES: {
       Expo: true,
       Millennium: true,
-      Canada: true
+      Canada: true,
+      "Line 1": true,
+      "Line 2": true,
+      "Line 4": true,
+      "Line 5": true,
+      "Line 6": true
     },
     mapLatNames: ["mapLatitude", "mapLat", "map_latitude", "map_lat", "centerLatitude", "centerLat"],
     mapLngNames: [

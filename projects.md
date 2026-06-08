@@ -2,21 +2,21 @@
 
 ## Current Status
 
-The Vancouver Transit Overlay is a Chrome/Chromium Manifest V3 extension for Facebook Marketplace map results.
+Transit Overlay for Marketplace is a Chrome/Chromium Manifest V3 extension for Facebook Marketplace map results.
 
 Current MVP behavior:
 
 - Detects the visible Facebook Marketplace map after dynamic page loads and route changes.
 - Injects a fixed-position transparent Leaflet overlay above the map.
-- Renders bundled SkyTrain station markers from `data/vancouver-stations.geojson`.
-- Renders bundled simplified route lines from `data/vancouver-lines.geojson`.
+- Renders bundled rapid-transit station markers for Vancouver and Toronto.
+- Renders bundled simplified rapid-transit route lines for Vancouver and Toronto.
 - Uses Facebook URL latitude/longitude as the center source.
 - Uses Facebook `map_tile.php` tile `z` values as the zoom source.
 - Applies temporary pan smoothing during drag so stations move with the host map while URL center state catches up.
 - Keeps markers, route lines, and hover tooltips click-through so listings and map controls still work.
-- Shows road-aware walking estimates from visible listing markers to nearby SkyTrain stations.
-- Provides an offline Commute panel with destination lookup, Bus/SkyTrain mode toggles, and rough listing-to-destination transit estimates.
-- Keeps commute route summaries readable by limiting graph routes to at most two transit legs and penalizing route changes.
+- Shows graph-based walking estimates from visible listing markers to nearby rapid-transit stations.
+- Provides an offline Commute panel with destination lookup, Bus/Train mode toggles, and rough listing-to-destination transit estimates.
+- Keeps commute route summaries readable by limiting graph routes to at most three transit legs, limiting bus legs, and penalizing route changes.
 - Uses a compact publish-ready UI for map toggles, the commute panel, station hover, walking estimates, and commute steps.
 - Provides a persisted Transit toggle.
 - Keeps debug tools in the codebase but disables them by default with `DEBUG = false`.
@@ -27,7 +27,7 @@ Validation completed:
 - `data/vancouver-stations.geojson` parses as valid GeoJSON.
 - `data/vancouver-lines.geojson` parses as valid GeoJSON.
 - `content.js` and every file in `scripts/` pass `node --check`.
-- `node scripts/validate-data.js` validates manifest resources, station data, route-line data, coordinates, and station/line references.
+- `node scripts/validate-data.js` validates manifest resources, Vancouver and Toronto station data, route-line data, walking packs, and city packs.
 
 ## How The Project Works
 
@@ -39,11 +39,11 @@ Runtime flow:
 
 - `content.js` wires ordered modules from `manifest.json`.
 - `scripts/map-detector.js` finds the map surface using scored DOM heuristics.
-- `scripts/overlay.js` creates the overlay, loads station/line GeoJSON, renders route lines below station markers, and manages persisted line visibility.
+- `scripts/overlay.js` creates the overlay, loads configured city station/line GeoJSON, renders route lines below station markers, and manages persisted line visibility.
 - `scripts/sync.js` mirrors URL center and Facebook tile zoom into Leaflet.
 - `scripts/pan-smoothing.js` applies visual-only CSS translation during map drag.
 - `scripts/station-hover.js` uses document-level hit testing for non-intercepting station hover details.
-- `scripts/transit-time.js` loads the offline city pack, searches destinations, and estimates simple Bus/SkyTrain routes from listing locations.
+- `scripts/transit-time.js` loads the offline city pack, searches destinations, and estimates simple Bus/Train routes from listing locations.
 - `scripts/walking-time*.js` scans visible listing markers, projects marker anchors through Leaflet, loads walking city packs, estimates nearby station walking times, and renders the walking-time tooltip.
 - `scripts/storage-debug.js` loads persisted toggle, calibration, and visible-line state.
 - `scripts/diagnostics.js` and `scripts/debug-bridge.js` remain available when `DEBUG = true`.
@@ -78,7 +78,7 @@ Walking-time hover flow:
 
 Walking-time city pack estimate flow:
 
-- The Vancouver walking pack lives at `data/vancouver-walking-pack.json` and is configured in `config.WALKING_CITY_PACKS`.
+- Vancouver and Toronto walking packs live at `data/<city>-walking-pack.json` and are configured in `config.WALKING_CITY_PACKS`.
 - Loaded packs normalize into `bounds`, `stations`, `nodes`, `edges`, and `edgeIndex`.
 - For listing coordinates inside a pack, candidate walking graph edges are found from nearby edge-index cells.
 - The listing coordinate is snapped to the nearest edge within `config.WALKING_SNAP_MAX_METERS`.
@@ -101,23 +101,25 @@ Walking-time debug helpers:
 
 ## Decisions Made
 
-- The MVP is Vancouver-only.
+- The project started as Vancouver-only; current bundled support includes Vancouver and Toronto.
 - Runtime data is static and bundled locally.
 - No external transit APIs are used at runtime.
-- Offline address lookup uses bundled City of Vancouver property-addresses data.
-- Bus stop lookup uses bundled TransLink GTFS static stop data.
-- No schedules, live arrivals, alerts, buses, SeaBus, West Coast Express, or global city support are included.
+- Offline address lookup uses bundled municipal address-point data.
+- Transit stop lookup uses bundled GTFS static stop data.
+- No schedules, live arrivals, alerts, traffic, frequency modeling, or backend-hosted global city support are included.
 - Route lines are simplified station-to-station geometry, not exact GTFS track geometry.
 - Station markers and route lines remain `pointer-events: none`.
 - Station UX is hover-only so Marketplace clicks are preserved.
 - Leaflet is bundled locally instead of loaded from a CDN.
-- Static station data was generated from TransLink GTFS Static Data.
+- Static station data is generated from city transit GTFS/static data where possible.
 - Shared stations store multiple lines in the `line` property array.
 - The overlay is appended to `document.body` and positioned with `position: fixed` to avoid Facebook offset-parent issues.
 - If URL map coordinates are missing, the overlay stays hidden rather than rendering in the wrong position.
 - Debug UI, pink outline, and page debug bridge are disabled by default for release testing.
 - Commute routing tracks active route state during graph search instead of only the current stop. This prevents unrealistic downtown micro-transfer chains such as `Bus 6 -> Bus 2 -> Bus 44 -> Bus N22 -> Bus 240`.
-- Commute routing currently caps displayed graph itineraries at two transit legs. If no simple static-GTFS route is found, the extension falls back to a rough direct stop-to-stop estimate.
+- Commute routing currently caps displayed graph itineraries at three transit legs and no more than two bus legs. If no simple static-GTFS route is found, the extension falls back to a rough direct stop-to-stop estimate.
+- Commute UI uses generic `Train` terminology for rapid transit instead of city-specific names like SkyTrain, subway, or LRT.
+- Commute steps render explicit transfer rows, including the route to change from, the route to change to, and the transfer stop when the route graph provides one.
 - Publishing UI pass keeps the overlay click-through model unchanged. Only the Transit and Commute buttons/panel accept pointer events; map markers, route lines, and hover estimate tooltips remain non-intercepting.
 
 ## Global Release Recommendation
@@ -180,7 +182,7 @@ Preferred rollout:
 
 ## Data Notes
 
-Station data:
+Vancouver station data:
 
 - File: `data/vancouver-stations.geojson`
 - 54 unique SkyTrain station features
@@ -207,6 +209,29 @@ Source:
   - `30052`: Millennium Line
   - `30053`: Expo Line
 
+Toronto station data:
+
+- File: `data/toronto-stations.geojson`
+- 112 TTC rapid-transit station features
+- Routes included:
+  - Line 1
+  - Line 2
+  - Line 4
+  - Line 5
+  - Line 6
+- Coordinates are generated from TTC GTFS stop/platform data.
+
+Toronto route-line data:
+
+- File: `data/toronto-lines.geojson`
+- Simplified station-to-station `LineString` features from representative GTFS trips
+- Branches included:
+  - Line 1 (Yonge-University)
+  - Line 2 (Bloor-Danforth)
+  - Line 4 (Sheppard)
+  - Line 5 Eglinton
+  - Line 6 Finch West
+
 City pack data:
 
 - Files:
@@ -215,11 +240,18 @@ City pack data:
   - `data/city-packs/vancouver/addresses.json`
   - `data/city-packs/vancouver/transit.json`
   - `data/city-packs/vancouver/grid.json`
-- Address lookup source: City of Vancouver property-addresses open data.
-- Transit stop source: TransLink GTFS Static Data `stops.txt`.
-- Current city pack includes about 98k address/station lookup entries and about 8.6k bus/SkyTrain stops.
+  - `data/city-packs/toronto/manifest.json`
+  - `data/city-packs/toronto/addresses.json`
+  - `data/city-packs/toronto/transit.json`
+  - `data/city-packs/toronto/grid.json`
+- Vancouver address lookup source: City of Vancouver property-addresses open data.
+- Vancouver transit stop source: TransLink GTFS Static Data.
+- Toronto address lookup source: City of Toronto address point data.
+- Toronto transit stop source: TTC GTFS Static Data.
+- Vancouver city pack includes about 98k address/station lookup entries and about 8.6k bus/train stops.
+- Toronto city pack includes about 220k address/station lookup entries and about 9.3k bus/streetcar/subway/LRT stops.
 - The Commute panel uses this data offline and stores the selected destination and mode toggles in `chrome.storage.local`.
-- Current transit-time tooltip is a rough offline estimate based on access/egress walking estimates and compact GTFS route edges from `trips.txt` and `stop_times.txt`. It can show bus/SkyTrain route numbers and transfers when the static route graph can connect the selected stops.
+- Current transit-time tooltip is a rough offline estimate based on access/egress walking estimates and compact GTFS route edges from `trips.txt` and `stop_times.txt`. It can show bus/train route numbers and transfers when the static route graph can connect the selected stops.
 - Transit-time estimates do not include wait time.
 - Bus route times use a conservative correction multiplier and transfer penalty because raw static GTFS edge averages were undercounting short downtown examples such as 1150 Jervis St to 725 Granville St.
 - The route graph still does not model live schedules, current departure time, traffic, or service frequency.
@@ -258,29 +290,39 @@ Data and validation:
 - `data/vancouver-stations.geojson`
 - `data/vancouver-lines.geojson`
 - `data/vancouver-walking-pack.json`
+- `data/toronto-stations.geojson`
+- `data/toronto-lines.geojson`
+- `data/toronto-walking-pack.json`
 - `data/city-packs/index.json`
 - `data/city-packs/vancouver/manifest.json`
 - `data/city-packs/vancouver/addresses.json`
 - `data/city-packs/vancouver/transit.json`
 - `data/city-packs/vancouver/grid.json`
+- `data/city-packs/toronto/manifest.json`
+- `data/city-packs/toronto/addresses.json`
+- `data/city-packs/toronto/transit.json`
+- `data/city-packs/toronto/grid.json`
 - `scripts/validate-data.js`
 - `scripts/build-city-pack.js`
+- `scripts/build-gtfs-metro-geojson.js`
 
 Docs:
 
 - `README.md`
 - `plan.md`
 - `projects.md`
+- `addnewcityblueprint.md`
 
 ## Next Work
 
-- Reload the unpacked extension in Chrome and test on Facebook Marketplace Vancouver map URLs.
+- Reload the unpacked extension in Chrome and test on Facebook Marketplace Vancouver and Toronto map URLs.
 - Confirm debug UI is hidden by default.
 - Test station and route alignment at radius/zoom states `1`, `2`, `3`, `6`, and `11`.
 - Hover-check Waterfront, Commercial-Broadway, Metrotown, Broadway-City Hall, Bridgeport, Richmond-Brighouse, and YVR-Airport.
+- Hover-check Union, Bloor-Yonge, St George, Eglinton, Kennedy, and Finch West.
 - Confirm Marketplace listing clicks still pass through stations, route lines, and hover tooltips.
 - Confirm Transit toggle persistence still works.
-- Decide whether the next feature is line filter UI, exact GTFS shape geometry, packaging/icons, or global-city groundwork.
+- Decide whether the next feature is line filter UI, exact GTFS shape geometry, packaging/icons, or static-hosted city-pack downloads.
 
 ## Zoom Jump Mitigation Notes
 
@@ -301,3 +343,4 @@ Docs:
 - Some Facebook map pages may not expose latitude and longitude in query parameters.
 - Station-to-station route lines are intentionally simplified and are not exact track geometry.
 - Static station and line data must be manually regenerated or maintained for now.
+- Toronto route lines were generated from representative GTFS trips and should be visually checked against TTC map behavior before publishing.

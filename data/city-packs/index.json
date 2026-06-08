@@ -1,1 +1,1 @@
-{"version":1,"packs":[{"id":"vancouver","name":"Metro Vancouver","bounds":{"west":-123.35,"south":49,"east":-122.45,"north":49.45},"resource":"data/city-packs/vancouver/manifest.json"}]}
+{"version":1,"packs":[{"id":"toronto","name":"Toronto","bounds":{"west":-79.75,"south":43.55,"east":-79.1,"north":43.95},"resource":"data/city-packs/toronto/manifest.json"},{"id":"vancouver","name":"Metro Vancouver","bounds":{"west":-123.35,"south":49,"east":-122.45,"north":49.45},"resource":"data/city-packs/vancouver/manifest.json"}]}
